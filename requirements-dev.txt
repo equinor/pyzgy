@@ -1,0 +1,4 @@
+segyio
+pillow
+matplotlib
+pytest
