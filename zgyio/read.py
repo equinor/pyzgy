@@ -1,30 +1,26 @@
+import struct
+
 import numpy as np
 import segyio
 from segyio import _segyio
 
 from openzgy.api import ZgyReader
-import struct
+from .loader import ZgyLoader
 
 class SeismicReader:
     def __init__(self, filename):
         self.filename = filename
         self.filehandle = ZgyReader(self.filename)
+        self.loader = ZgyLoader(self.filehandle)
 
         self.n_ilines, self.n_xlines, self.n_samples = self.filehandle.size
         self.tracecount = self.n_xlines * self.n_ilines
 
-        self.ilines = np.arange(int(self.filehandle.annotstart[0]),
-                                int(self.filehandle.annotstart[0]+self.n_ilines*self.filehandle.annotinc[0]),
-                                int(self.filehandle.annotinc[0]))
-
-        self.xlines = np.arange(int(self.filehandle.annotstart[1]),
-                                int(self.filehandle.annotstart[1]+self.n_xlines*self.filehandle.annotinc[1]),
-                                int(self.filehandle.annotinc[1]))
-
+        self.ilines = self.get_haxis(0)
+        self.xlines = self.get_haxis(1)
         self.samples = np.arange(self.filehandle.zstart,
                                  self.filehandle.zstart+self.n_samples*self.filehandle.zinc,
                                  self.filehandle.zinc)
-
 
     def __enter__(self):
         return self
@@ -42,6 +38,10 @@ class SeismicReader:
             raise IndexError("Coordinate {} not in axis".format(coord))
         return index
 
+    def get_haxis(self, idx):
+        return np.arange(int(self.filehandle.annotstart[idx]),
+                         int(self.filehandle.annotstart[idx]+self.filehandle.size[idx]*self.filehandle.annotinc[0]),
+                         int(self.filehandle.annotinc[idx]))
 
     def read_inline_number(self, il_no):
         """Reads one inline from ZGY file
@@ -71,9 +71,7 @@ class SeismicReader:
         inline : numpy.ndarray of float32, shape: (n_xlines, n_samples)
             The specified inline, decompressed
         """
-        buf = np.zeros((1, self.n_xlines, self.n_samples), dtype=np.float32)
-        self.filehandle.read((il_idx, 0, 0), buf)
-        return buf.reshape((self.n_xlines, self.n_samples))
+        return self.loader.load_inline_chunk(64*(il_idx//64))[il_idx%64, :, :].copy()
 
 
     def read_crossline_number(self, xl_no):
@@ -104,9 +102,7 @@ class SeismicReader:
         crossline : numpy.ndarray of float32, shape: (n_ilines, n_samples)
             The specified crossline, decompressed
         """
-        buf = np.zeros((self.n_ilines, 1, self.n_samples), dtype=np.float32)
-        self.filehandle.read((0, xl_idx, 0), buf)
-        return buf.reshape((self.n_ilines, self.n_samples))
+        return self.loader.load_crossline_chunk(64 * (xl_idx // 64))[:, xl_idx % 64, :].copy()
 
 
     def read_zslice_coord(self, samp_no):
@@ -137,9 +133,7 @@ class SeismicReader:
         zslice : numpy.ndarray of float32, shape: (n_ilines, n_xlines)
             The specified zslice (time or depth, depending on file contents), decompressed
         """
-        buf = np.zeros((self.n_ilines, self.n_xlines, 1), dtype=np.float32)
-        self.filehandle.read((0, 0, z_idx), buf)
-        return buf.reshape((self.n_ilines, self.n_xlines))
+        return self.loader.load_zslice_chunk(64 * (z_idx // 64))[:, :, z_idx % 64].copy()
 
 
     def read_subvolume(self, min_il, max_il, min_xl, max_xl, min_z, max_z):
@@ -205,9 +199,8 @@ class SeismicReader:
             raise IndexError("Index {} is out of range, total traces is {}".format(index, self.n_ilines * self.n_xlines))
 
         il, xl = index // self.n_xlines, index % self.n_xlines
-        buf = np.zeros((1, 1, self.n_samples), dtype=np.float32)
-        self.filehandle.read((il, xl, 0), buf)
-        return buf
+        return self.loader.load_trace_chunk(64*(il//64), 64*(xl//64))[il%64, xl%64, :].copy()
+
 
 
     def gen_trace_header(self, index):
