@@ -73,6 +73,13 @@ class ZsliceAccessor(Accessor, Mapping):
         self.keys_object = self.samples
         self.values_function = self.read_zslice
 
+class HeaderAccessor(Accessor, Mapping):
+    def __init__(self, file):
+        super(Accessor, self).__init__(file)
+        self.len_object = self.tracecount
+        self.keys_object = list(range(self.tracecount))
+        self.values_function = self.gen_trace_header
+
 class TraceAccessor(Accessor, Mapping):
     def __init__(self, file):
         super(Accessor, self).__init__(file)
@@ -88,6 +95,7 @@ class SegyioEmulator(SeismicReader):
         self.xline = CrosslineAccessor(self.filename)
         self.depth_slice = ZsliceAccessor(self.filename)
         self.trace = TraceAccessor(self.filename)
+        self.header = HeaderAccessor(self.filename)
 
 # Copyright 2021, Equinor
 #

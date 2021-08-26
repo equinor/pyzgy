@@ -1,5 +1,9 @@
 import numpy as np
+import segyio
+from segyio import _segyio
+
 from openzgy.api import ZgyReader
+import struct
 
 class SeismicReader:
     def __init__(self, filename):
@@ -204,6 +208,44 @@ class SeismicReader:
         buf = np.zeros((1, 1, self.n_samples), dtype=np.float32)
         self.filehandle.read((il, xl, 0), buf)
         return buf
+
+
+    def gen_trace_header(self, index):
+        """Generates one trace header from ZGY file,
+        note that only a few SEG-Y header values can be
+        recovered from ZGY files: TRACE_SAMPLE_COUNT, TRACE_SAMPLE_INTERVAL, CDP_X, CDP_Y, INLINE_3D, CROSSLINE_3D
+
+        Parameters
+        ----------
+        index : int
+            The ordinal number of the trace header in the file
+
+        Returns
+        -------
+        header : dict
+            A single header as a dictionary of headerword-value pairs
+        """
+        if not 0 <= index < self.n_ilines * self.n_xlines:
+            raise IndexError(self.range_error.format(index, 0, self.tracecount))
+
+        xl_coord, il_coord = index % self.n_ilines, index // self.n_ilines
+
+        easting_inc_il = (self.filehandle.corners[1][0] - self.filehandle.corners[0][0]) / (self.filehandle.size[0] - 1)
+        northing_inc_il = (self.filehandle.corners[1][1] - self.filehandle.corners[0][1]) / (self.filehandle.size[0] - 1)
+        easting_inc_xl = (self.filehandle.corners[2][0] - self.filehandle.corners[0][0]) / (self.filehandle.size[1] - 1)
+        northing_inc_xl = (self.filehandle.corners[2][1] - self.filehandle.corners[0][1]) / (self.filehandle.size[1] - 1)
+
+        header = bytearray(240)
+        header[180:184] = struct.pack(">I", int(round(100.0 * (self.filehandle.corners[0][0] + il_coord * easting_inc_il + xl_coord * easting_inc_xl)))) # CDP_X
+        header[184:188] = struct.pack(">I", int(round(100.0 * (self.filehandle.corners[0][1] + il_coord * northing_inc_il + xl_coord * northing_inc_xl)))) # CDP_Y
+        header[188:192] = struct.pack(">I", int(self.filehandle.annotstart[0] + il_coord * self.filehandle.annotinc[0])) # INLINE_3D
+        header[192:196] = struct.pack(">I", int(self.filehandle.annotstart[1] + xl_coord * self.filehandle.annotinc[1])) # CROSSLINE_3D
+
+        header[114:116] = struct.pack(">H", self.n_samples) # Samples per trace
+        header[116:118] = struct.pack(">H", int(self.filehandle.zinc * 1000)) # Sample interval (μs/m)
+
+        return segyio.segy.Field(header, kind='trace')
+
 
 # Copyright 2021, Equinor
 #

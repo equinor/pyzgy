@@ -94,6 +94,19 @@ def test_trace_accessor():
                 assert np.allclose(zgy_trace, segy_trace, rtol=1e-5)
 
 
+def test_read_trace_header():
+    with zgyio.open(ZGY_FILE) as zgyfile:
+        with segyio.open(SGY_FILE) as sgyfile:
+            for trace_number in range(25):
+                sgz_header = zgyfile.header[trace_number]
+                sgy_header = sgyfile.header[trace_number]
+                assert sgz_header[181] == sgy_header[181]
+                assert sgz_header[185] == sgy_header[185]
+                assert sgz_header[189] == sgy_header[189]
+                assert sgz_header[193] == sgy_header[193]
+
+
+
 def compare_cube(zgy_filename, sgy_filename, tolerance):
     vol_sgy = segyio.tools.cube(sgy_filename)
     vol_zgy = zgyio.tools.cube(zgy_filename)
