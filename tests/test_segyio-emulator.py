@@ -88,7 +88,7 @@ def test_zslice_accessor():
 def test_trace_accessor():
     with zgyio.open(ZGY_FILE) as zgyfile:
         with segyio.open(SGY_FILE) as segyfile:
-            for trace_number in range(25):
+            for trace_number in range(-5, 25, 1):
                 zgy_trace = zgyfile.trace[trace_number]
                 segy_trace = segyfile.trace[trace_number]
                 assert np.allclose(zgy_trace, segy_trace, rtol=1e-5)
@@ -97,14 +97,13 @@ def test_trace_accessor():
 def test_read_trace_header():
     with zgyio.open(ZGY_FILE) as zgyfile:
         with segyio.open(SGY_FILE) as sgyfile:
-            for trace_number in range(25):
-                sgz_header = zgyfile.header[trace_number]
+            for trace_number in range(-5, 25, 1):
+                zgy_header = zgyfile.header[trace_number]
                 sgy_header = sgyfile.header[trace_number]
-                assert sgz_header[181] == sgy_header[181]
-                assert sgz_header[185] == sgy_header[185]
-                assert sgz_header[189] == sgy_header[189]
-                assert sgz_header[193] == sgy_header[193]
-
+                assert zgy_header[181] == sgy_header[181]
+                assert zgy_header[185] == sgy_header[185]
+                assert zgy_header[189] == sgy_header[189]
+                assert zgy_header[193] == sgy_header[193]
 
 
 def compare_cube(zgy_filename, sgy_filename, tolerance):
