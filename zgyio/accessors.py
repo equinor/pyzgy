@@ -17,6 +17,8 @@ class Accessor(SeismicReader):
         if isinstance(subscript, slice):
             start, stop, step = subscript.indices(len(self))
             return [self.values_function(index) for index in range(start, stop, step)]
+        elif subscript < 0:
+            return self.values_function(len(self)+subscript)
         else:
             return self.values_function(subscript)
 
@@ -48,6 +50,8 @@ class SliceAccessor(Accessor):
             if stop is None:
                 stop = int(self.keys_object[-1] + 1)
             return [self.values_function(index) for index in range(start, stop, step)]
+        elif subscript < 0:
+            return self.values_function(len(self)+subscript)
         else:
             return self.values_function(subscript)
 
