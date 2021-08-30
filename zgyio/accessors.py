@@ -96,6 +96,7 @@ class SegyioEmulator(SeismicReader):
         self.depth_slice = ZsliceAccessor(self.filename)
         self.trace = TraceAccessor(self.filename)
         self.header = HeaderAccessor(self.filename)
+        self.unstructured = False
 
 # Copyright 2021, Equinor
 #
