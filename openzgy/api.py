@@ -573,7 +573,7 @@ class ZgyReader(ZgyMetaAndTools):
         self.close()
 
     ##@brief Read bulk data into a caller specified buffer.
-    def read(self, start, data, *, lod = 0, verbose = None):
+    def read(self, start, data, *, lod = 0, verbose = None, zeroed_data = False):
         """
         Read an arbitraty region of bulk data into a caller specified buffer.
 
@@ -594,7 +594,7 @@ class ZgyReader(ZgyMetaAndTools):
         if not self._accessor: raise ZgyUserError("ZGY file is not open for read.")
         self._accessor.readToExistingBuffer(data, start, lod=lod,
                                             as_float=(data.dtype==np.float32),
-                                            verbose=verbose)
+                                            verbose=verbose, zeroed_result=zeroed_data)
 
     ##@brief Get hint about all constant region.
     ##@image html readconst-fig1.png
