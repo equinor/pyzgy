@@ -231,7 +231,7 @@ class SeismicReader:
         if not 0 <= index < self.n_ilines * self.n_xlines:
             raise IndexError(self.range_error.format(index, 0, self.tracecount))
 
-        xl_coord, il_coord = index % self.n_ilines, index // self.n_ilines
+        xl_coord, il_coord = index % self.n_xlines, index // self.n_xlines
 
         header = bytearray(240)
         header[180:184] = struct.pack(">I", int(round(100.0 * (self.corners[0][0] + il_coord * self.easting_inc_il + xl_coord * self.easting_inc_xl)))) # CDP_X
