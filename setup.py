@@ -10,5 +10,5 @@ setuptools.setup(name='zgyio',
                  use_scm_version=True,
                  install_requires=['numpy'],
                  setup_requires=['setuptools', 'setuptools_scm'],
-                 packages=['zgyio', 'openzgy']
+                 packages=['zgyio', 'openzgy', 'openzgy.impl']
                  )
