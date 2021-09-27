@@ -666,7 +666,7 @@ class ZgyInternalBulk:
                           (0, 0, 0), self._metadata._ih._size,
                           verbose=verbose)
 
-    def readToExistingBuffer(self, result, start, lod, as_float, *, verbose = None):
+    def readToExistingBuffer(self, result, start, lod, as_float, *, verbose = None, zeroed_result=False):
         """
         Read bulk data starting at "start" in index space and store the
         result in the provided 3d numpy array. Start should be in the range
@@ -706,14 +706,16 @@ class ZgyInternalBulk:
         #print(bricks)
 
         #print("Default storage", defaultstorage, " and value", defaultvalue)
-        result.fill(defaultvalue if _padding_fill_value is None else _padding_fill_value)
+        if not zeroed_result:
+            result.fill(defaultvalue if _padding_fill_value is None else _padding_fill_value)
         # After all bricks have been processed, the padding past the
         # end if the survey might still not have been touched. Just in
         # case the request did in fact include such samples we will
         # initialize the entire result buffer to the default value.
-        result.fill(_padding_fill_value if _padding_fill_value is not None else
-                    defaultvalue if result.dtype == np.float32 else
-                    defaultstorage)
+        if not zeroed_result:
+            result.fill(_padding_fill_value if _padding_fill_value is not None else
+                        defaultvalue if result.dtype == np.float32 else
+                        defaultstorage)
         bricksize_bytes = np.prod(self._metadata._ih._bricksize) * file_dtype().itemsize
         requests = []
         for startpos, brickstatus, fileoffset, constvalue, real_bricksize in bricks:
