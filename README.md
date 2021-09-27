@@ -2,6 +2,7 @@
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Tests](https://github.com/equinor/zgyio/actions/workflows/python-app.yml/badge.svg)](https://github.com/equinor/zgyio/actions/workflows/python-app.yml)
+[![PyPi Version](https://img.shields.io/pypi/v/zgyio.svg)](https://pypi.org/project/zgyio/)
 
 Convenience wrapper around Schlumberger's OpenZGY Python package which enables 
 reading of ZGY files with a syntax familiar to users of segyio.
@@ -12,7 +13,8 @@ reading of ZGY files with a syntax familiar to users of segyio.
 
 Requires **openzgy** package from Schlumberger, which is (for now) bundled here under Apache v2.0 license
 
-Installation is (for now) ```pip install git+ssh://git@github.com/equinor/zgyio.git@master```
+- Wheels from [PyPI](https://pypi.org/project/zgyio/) without zgy support: `pip install zgyio`
+- Source from [Github](https://github.com/equinor/zgyio): `git clone https://github.com/equinor/zgyio.git`
 
 ---
 
