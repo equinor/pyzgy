@@ -15,11 +15,11 @@ class SeismicReader:
 
         self.ilines = np.arange(int(self.filehandle.annotstart[0]),
                                 int(self.filehandle.annotstart[0]+self.n_ilines*self.filehandle.annotinc[0]),
-                                int(self.filehandle.annotinc[0]))
+                                int(self.filehandle.annotinc[0]), dtype=np.intc)
 
         self.xlines = np.arange(int(self.filehandle.annotstart[1]),
                                 int(self.filehandle.annotstart[1]+self.n_xlines*self.filehandle.annotinc[1]),
-                                int(self.filehandle.annotinc[1]))
+                                int(self.filehandle.annotinc[1]), dtype=np.intc)
 
         self.samples = np.arange(self.filehandle.zstart,
                                  self.filehandle.zstart+self.n_samples*self.filehandle.zinc,
