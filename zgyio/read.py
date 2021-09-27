@@ -18,6 +18,7 @@ class SeismicReader:
 
         self.ilines = self.get_haxis(0)
         self.xlines = self.get_haxis(1)
+
         self.samples = np.arange(self.filehandle.zstart,
                                  self.filehandle.zstart+self.n_samples*self.filehandle.zinc,
                                  self.filehandle.zinc)
@@ -51,7 +52,7 @@ class SeismicReader:
     def get_haxis(self, idx):
         return np.arange(int(self.filehandle.annotstart[idx]),
                          int(self.filehandle.annotstart[idx]+self.filehandle.size[idx]*self.filehandle.annotinc[0]),
-                         int(self.filehandle.annotinc[idx]))
+                         int(self.filehandle.annotinc[idx]), dtype=np.intc)
 
     def read_inline_number(self, il_no):
         """Reads one inline from ZGY file

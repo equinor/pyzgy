@@ -1,6 +1,7 @@
 # zgyio
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+[![Tests](https://github.com/equinor/zgyio/actions/workflows/python-app.yml/badge.svg)](https://github.com/equinor/zgyio/actions/workflows/python-app.yml)
 
 Convenience wrapper around Schlumberger's OpenZGY Python package which enables 
 reading of ZGY files with a syntax familiar to users of segyio.
