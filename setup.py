@@ -8,7 +8,7 @@ setuptools.setup(name='zgyio',
                  url='https://github.com/equinor/zgyio',
 
                  use_scm_version=True,
-                 install_requires=['numpy'],
+                 install_requires=['numpy', 'segyio'],
                  setup_requires=['setuptools', 'setuptools_scm'],
                  packages=['zgyio', 'openzgy', 'openzgy.impl']
                  )
