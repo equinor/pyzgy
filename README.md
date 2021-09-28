@@ -13,7 +13,7 @@ reading of ZGY files with a syntax familiar to users of segyio.
 
 Requires **openzgy** package from Schlumberger, which is (for now) bundled here under Apache v2.0 license
 
-- Wheels from [PyPI](https://pypi.org/project/zgyio/) without zgy support: `pip install zgyio`
+- Wheels from [PyPI](https://pypi.org/project/zgyio/): `pip install zgyio`
 - Source from [Github](https://github.com/equinor/zgyio): `git clone https://github.com/equinor/zgyio.git`
 
 ---
