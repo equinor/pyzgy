@@ -11,7 +11,7 @@ reading of ZGY files with a syntax familiar to users of segyio.
 
 ### Installation
 
-Requires **openzgy** package from Schlumberger, which is (for now) bundled here under Apache v2.0 license
+Requires [**openzgy** package from Schlumberger](https://community.opengroup.org/osdu/platform/domain-data-mgmt-services/seismic/open-zgy/-/tree/master/python), which is (for now) bundled here under Apache v2.0 license
 
 - Wheels from [PyPI](https://pypi.org/project/zgyio/): `pip install zgyio`
 - Source from [Github](https://github.com/equinor/zgyio): `git clone https://github.com/equinor/zgyio.git`
