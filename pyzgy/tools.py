@@ -1,4 +1,4 @@
-from zgyio.read import SeismicReader
+from pyzgy.read import SeismicReader
 
 def cube(filename):
     with SeismicReader(filename) as reader:

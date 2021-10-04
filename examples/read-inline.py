@@ -1,4 +1,4 @@
-import zgyio
+import pyzgy
 import segyio
 import time
 import os
@@ -17,10 +17,10 @@ if len(sys.argv) != 3:
 CLIP = 0.2
 SCALE = 1.0/(2.0*CLIP)
 
-with zgyio.open(os.path.join(base_path, '0.zgy')) as zgyfile:
+with pyzgy.open(os.path.join(base_path, '0.zgy')) as zgyfile:
     t0 = time.time()
     slice_zgy = zgyfile.iline[zgyfile.ilines[LINE_IDX]]
-    print("zgyio took", time.time() - t0)
+    print("pyzgy took", time.time() - t0)
 
 im = Image.fromarray(np.uint8(cm.seismic((slice_zgy.T.clip(-CLIP, CLIP) + CLIP) * SCALE)*255))
 im.save(os.path.join(base_path, 'out_inline-zgy.png'))

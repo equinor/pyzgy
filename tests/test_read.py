@@ -1,6 +1,6 @@
 import numpy as np
 import segyio
-from zgyio.read import SeismicReader
+from pyzgy.read import SeismicReader
 
 ZGY_SGY_FILE_PAIRS = [('test_data/small-{}bit.zgy'.format(n),
                        'test_data/small-{}bit.sgy'.format(n))

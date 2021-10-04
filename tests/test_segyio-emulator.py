@@ -1,13 +1,13 @@
 import numpy as np
 import segyio
-import zgyio
+import pyzgy
 
 ZGY_FILE = 'test_data/small-32bit.zgy'
 SGY_FILE = 'test_data/small-32bit.sgy'
 
 
 def compare_inline_ordinal(zgy_filename, sgy_filename, lines_to_test, tolerance):
-    with zgyio.open(zgy_filename) as zgyfile:
+    with pyzgy.open(zgy_filename) as zgyfile:
         with segyio.open(sgy_filename) as segyfile:
             for line_ordinal in lines_to_test:
                 slice_segy = segyfile.iline[segyfile.ilines[line_ordinal]]
@@ -15,7 +15,7 @@ def compare_inline_ordinal(zgy_filename, sgy_filename, lines_to_test, tolerance)
                 assert np.allclose(slice_zgy, slice_segy, rtol=tolerance)
 
 def compare_inline_number(zgy_filename, sgy_filename, lines_to_test, tolerance):
-    with zgyio.open(zgy_filename) as zgyfile:
+    with pyzgy.open(zgy_filename) as zgyfile:
         with segyio.open(sgy_filename) as segyfile:
             for line_number in lines_to_test:
                 slice_segy = segyfile.iline[line_number]
@@ -24,7 +24,7 @@ def compare_inline_number(zgy_filename, sgy_filename, lines_to_test, tolerance):
 
 def compare_inline_slicing(zgy_filename):
     slices = [slice(1, 5, 2), slice(1, 2, None), slice(1, 3, None), slice(None, 3, None), slice(3, None, None)]
-    with zgyio.open(zgy_filename) as zgyfile:
+    with pyzgy.open(zgy_filename) as zgyfile:
         for slice_ in slices:
             slices_slice = np.asarray(zgyfile.iline[slice_])
             start = slice_.start if slice_.start is not None else 1
@@ -40,7 +40,7 @@ def test_inline_accessor():
 
 
 def compare_crossline_ordinal(zgy_filename, sgy_filename, lines_to_test, tolerance):
-    with zgyio.open(zgy_filename) as zgyfile:
+    with pyzgy.open(zgy_filename) as zgyfile:
         with segyio.open(sgy_filename) as segyfile:
             for line_ordinal in lines_to_test:
                 slice_segy = segyfile.xline[segyfile.xlines[line_ordinal]]
@@ -48,7 +48,7 @@ def compare_crossline_ordinal(zgy_filename, sgy_filename, lines_to_test, toleran
                 assert np.allclose(slice_zgy, slice_segy, rtol=tolerance)
 
 def compare_crossline_number(zgy_filename, sgy_filename, lines_to_test, tolerance):
-    with zgyio.open(zgy_filename) as zgyfile:
+    with pyzgy.open(zgy_filename) as zgyfile:
         with segyio.open(sgy_filename) as segyfile:
             for line_number in lines_to_test:
                 slice_segy = segyfile.xline[line_number]
@@ -57,7 +57,7 @@ def compare_crossline_number(zgy_filename, sgy_filename, lines_to_test, toleranc
 
 def compare_crossline_slicing(zgy_filename):
     slices = [slice(20, 21, 2), slice(21, 23, 1), slice(None, 22, None), slice(22, None, None)]
-    with zgyio.open(zgy_filename) as zgyfile:
+    with pyzgy.open(zgy_filename) as zgyfile:
         for slice_ in slices:
             slices_slice = np.asarray(zgyfile.xline[slice_])
             start = slice_.start if slice_.start is not None else 20
@@ -73,7 +73,7 @@ def test_crossline_accessor():
 
 
 def compare_zslice(zgy_filename, tolerance):
-    with zgyio.open(zgy_filename) as zgyfile:
+    with pyzgy.open(zgy_filename) as zgyfile:
         with segyio.open(SGY_FILE) as segyfile:
             for line_number in range(50):
                 slice_zgy = zgyfile.depth_slice[line_number]
@@ -86,7 +86,7 @@ def test_zslice_accessor():
 
 
 def test_trace_accessor():
-    with zgyio.open(ZGY_FILE) as zgyfile:
+    with pyzgy.open(ZGY_FILE) as zgyfile:
         with segyio.open(SGY_FILE) as segyfile:
             for trace_number in range(-5, 25, 1):
                 zgy_trace = zgyfile.trace[trace_number]
@@ -95,7 +95,7 @@ def test_trace_accessor():
 
 
 def test_read_trace_header():
-    with zgyio.open(ZGY_FILE) as zgyfile:
+    with pyzgy.open(ZGY_FILE) as zgyfile:
         with segyio.open(SGY_FILE) as sgyfile:
             for trace_number in range(-5, 25, 1):
                 zgy_header = zgyfile.header[trace_number]
@@ -108,7 +108,7 @@ def test_read_trace_header():
 
 def compare_cube(zgy_filename, sgy_filename, tolerance):
     vol_sgy = segyio.tools.cube(sgy_filename)
-    vol_zgy = zgyio.tools.cube(zgy_filename)
+    vol_zgy = pyzgy.tools.cube(zgy_filename)
     assert np.allclose(vol_zgy, vol_sgy, rtol=tolerance)
 
 def test_cube_func():
