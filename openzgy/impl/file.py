@@ -45,11 +45,12 @@ from contextlib import contextmanager, suppress
 from collections import namedtuple
 
 from ..exception import *
+import warnings
 
 try:
     import sdglue as sd
 except Exception as ex:
-    print("seismic store access is not available:", ex)
+    warnings.warn("seismic store access is not available: " + str(ex))
     sd = None
 
 class UsageHint(Enum):

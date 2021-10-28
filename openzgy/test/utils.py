@@ -7,6 +7,7 @@ Test misc.
 import os, time
 import numpy as np
 from .. import api
+import warnings
 
 # If SD tests cannot run then in most cases treat this as a warning only.
 # There is not much point in letting dozens of tests fail for the same
@@ -18,10 +19,10 @@ from .. import api
 try:
     import sdglue as sd
 except Exception as ex:
-    print("seismic store access via sdglue is not available:", ex)
+    warnings.warn("seismic store access is not available: " + str(ex))
     sd = None
 if sd and not (os.getenv("OPENZGY_SDURL") and os.getenv("OPENZGY_SDAPIKEY")):
-    print("seismic store access requires $OPENZGY_SDURL and $OPENZGY_SDAPIKEY")
+    warnings.warn("seismic store access requires $OPENZGY_SDURL and $OPENZGY_SDAPIKEY")
     sd = None
 
 def SDTestData(name):
