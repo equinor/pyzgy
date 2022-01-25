@@ -9,8 +9,12 @@ from .loader import ZgyLoader
 
 class SeismicReader:
     def __init__(self, filename):
-        self._filename = filename
-        self.filehandle = ZgyReader(self._filename)
+        if isinstance(filename, ZgyReader):
+            self._filename = filename._fd._name
+            self.filehandle = filename
+        else:
+            self._filename = filename
+            self.filehandle = ZgyReader(self._filename)
         self.loader = ZgyLoader(self.filehandle)
 
         self.n_ilines, self.n_xlines, self.n_samples = self.filehandle.size

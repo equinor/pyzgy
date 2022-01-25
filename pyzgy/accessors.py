@@ -95,11 +95,11 @@ class TraceAccessor(Accessor, Mapping):
 class SegyioEmulator(SeismicReader):
     def __init__(self, filename):
         super(SegyioEmulator, self).__init__(filename)
-        self.iline = InlineAccessor(self._filename)
-        self.xline = CrosslineAccessor(self._filename)
-        self.depth_slice = ZsliceAccessor(self._filename)
-        self.trace = TraceAccessor(self._filename)
-        self.header = HeaderAccessor(self._filename)
+        self.iline = InlineAccessor(self.filehandle)
+        self.xline = CrosslineAccessor(self.filehandle)
+        self.depth_slice = ZsliceAccessor(self.filehandle)
+        self.trace = TraceAccessor(self.filehandle)
+        self.header = HeaderAccessor(self.filehandle)
         self.unstructured = False
 
 # Copyright 2021, Equinor
