@@ -1,4 +1,5 @@
 import numpy as np
+import pytest
 import segyio
 import pyzgy
 
@@ -111,10 +112,10 @@ def compare_cube(zgy_filename, sgy_filename, tolerance):
     vol_zgy = pyzgy.tools.cube(zgy_filename)
     assert np.allclose(vol_zgy, vol_sgy, rtol=tolerance)
 
-def compare_dt(sgz_filename, sgy_filename):
+def compare_dt(zgy_filename, sgy_filename):
     with segyio.open(sgy_filename) as sgy_file:
         dt_sgy = segyio.tools.dt(sgy_file)
-    with pyzgy.open(sgz_filename) as zgy_file:
+    with pyzgy.open(zgy_filename) as zgy_file:
         dt_zgy = pyzgy.tools.dt(zgy_file)
     assert dt_sgy == dt_zgy
 

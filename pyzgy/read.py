@@ -12,9 +12,6 @@ class SeismicReader:
         if isinstance(filename, ZgyReader):
             self._filename = filename._fd._name
             self.filehandle = filename
-        elif isinstance(filename, SeismicReader):
-            self._filename = filename._filename
-            self.filehandle = filename.filehandle
         else:
             self._filename = filename
             self.filehandle = ZgyReader(self._filename)
