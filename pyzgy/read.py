@@ -242,6 +242,7 @@ class SeismicReader:
         xl_coord, il_coord = index % self.n_xlines, index // self.n_xlines
 
         header = bytearray(240)
+        header[70:72] = struct.pack(">h", -100) # A scalar of -100 is implicit in supplying UTM coordinates in cm
         header[180:184] = struct.pack(">I", int(round(100.0 * (self.corners[0][0] + il_coord * self.easting_inc_il + xl_coord * self.easting_inc_xl)))) # CDP_X
         header[184:188] = struct.pack(">I", int(round(100.0 * (self.corners[0][1] + il_coord * self.northing_inc_il + xl_coord * self.northing_inc_xl)))) # CDP_Y
         header[188:192] = struct.pack(">I", int(self.annotstart[0] + il_coord * self.annotinc[0])) # INLINE_3D

@@ -101,6 +101,7 @@ def test_read_trace_header():
             for trace_number in range(-5, 25, 1):
                 zgy_header = zgyfile.header[trace_number]
                 sgy_header = sgyfile.header[trace_number]
+                assert zgy_header[71] == -100
                 assert zgy_header[181] == sgy_header[181]
                 assert zgy_header[185] == sgy_header[185]
                 assert zgy_header[189] == sgy_header[189]
