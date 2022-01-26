@@ -1,6 +1,10 @@
 import numpy as np
+import pytest
 import segyio
+
 from pyzgy.read import SeismicReader
+from openzgy.exception import ZgyUserError
+
 
 ZGY_SGY_FILE_PAIRS = [('test_data/small-{}bit.zgy'.format(n),
                        'test_data/small-{}bit.sgy'.format(n))
@@ -147,3 +151,10 @@ def compare_volume(zgy_filename, sgy_filename, tolerance):
 def test_read_volume():
     for ZGY_FILE, SGY_FILE in ZGY_SGY_FILE_PAIRS:
         compare_volume(ZGY_FILE, SGY_FILE, tolerance=1e-5)
+
+def test_file_close():
+    with pytest.raises(ZgyUserError):
+        zgy_filename, _ = ZGY_SGY_FILE_PAIRS[0]
+        zgy_file = SeismicReader(zgy_filename)
+        zgy_file.close()
+        zgy_file.read_volume()
