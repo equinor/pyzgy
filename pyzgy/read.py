@@ -58,7 +58,7 @@ class SeismicReader:
 
     def get_haxis(self, idx):
         return np.arange(int(self.filehandle.annotstart[idx]),
-                         int(self.filehandle.annotstart[idx]+self.filehandle.size[idx]*self.filehandle.annotinc[0]),
+                         int(self.filehandle.annotstart[idx]+self.filehandle.size[idx]*self.filehandle.annotinc[idx]),
                          int(self.filehandle.annotinc[idx]), dtype=np.intc)
 
     def read_inline_number(self, il_no):
