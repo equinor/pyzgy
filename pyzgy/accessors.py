@@ -81,14 +81,14 @@ class HeaderAccessor(Accessor, Mapping):
     def __init__(self, file):
         super(Accessor, self).__init__(file)
         self.len_object = self.tracecount
-        self.keys_object = list(range(self.tracecount))
+        self.keys_object = range(self.tracecount)
         self.values_function = self.gen_trace_header
 
 class TraceAccessor(Accessor, Mapping):
     def __init__(self, file):
         super(Accessor, self).__init__(file)
         self.len_object = self.tracecount
-        self.keys_object = list(range(self.tracecount))
+        self.keys_object = range(self.tracecount)
         self.values_function = self.get_trace
 
 
