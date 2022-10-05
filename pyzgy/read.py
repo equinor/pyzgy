@@ -7,6 +7,7 @@ from segyio import _segyio
 from openzgy.api import ZgyReader
 from .loader import ZgyLoader
 
+
 class SeismicReader:
     def __init__(self, filename):
         if isinstance(filename, ZgyReader):
@@ -27,15 +28,15 @@ class SeismicReader:
                                  self.filehandle.zstart+self.n_samples*self.filehandle.zinc,
                                  self.filehandle.zinc)
 
-        self.easting_inc_il = (self.filehandle.corners[1][0] - self.filehandle.corners[0][0]) / (self.filehandle.size[0] - 1)
-        self.northing_inc_il = (self.filehandle.corners[1][1] - self.filehandle.corners[0][1]) / (self.filehandle.size[0] - 1)
-        self.easting_inc_xl = (self.filehandle.corners[2][0] - self.filehandle.corners[0][0]) / (self.filehandle.size[1] - 1)
-        self.northing_inc_xl = (self.filehandle.corners[2][1] - self.filehandle.corners[0][1]) / (self.filehandle.size[1] - 1)
-
         self.corners = self.filehandle.corners
         self.annotstart = self.filehandle.annotstart
         self.annotinc = self.filehandle.annotinc
         self.zinc = self.filehandle.zinc
+
+        self.easting_inc_il = (self.corners[1][0] - self.corners[0][0]) / (self.filehandle.size[0] - 1)
+        self.northing_inc_il = (self.corners[1][1] - self.corners[0][1]) / (self.filehandle.size[0] - 1)
+        self.easting_inc_xl = (self.corners[2][0] - self.corners[0][0]) / (self.filehandle.size[1] - 1)
+        self.northing_inc_xl = (self.corners[2][1] - self.corners[0][1]) / (self.filehandle.size[1] - 1)
 
     def __enter__(self):
         return self
@@ -58,7 +59,7 @@ class SeismicReader:
 
     def get_haxis(self, idx):
         return np.arange(int(self.filehandle.annotstart[idx]),
-                         int(self.filehandle.annotstart[idx]+self.filehandle.size[idx]*self.filehandle.annotinc[idx]),
+                         int(self.filehandle.annotstart[idx] + self.filehandle.size[idx]*self.filehandle.annotinc[idx]),
                          int(self.filehandle.annotinc[idx]), dtype=np.intc)
 
     def read_inline_number(self, il_no):
@@ -81,7 +82,7 @@ class SeismicReader:
 
         Parameters
         ----------
-        il_id : int
+        il_idx : int
             The ordinal number of the inline in the file
 
         Returns
@@ -89,8 +90,7 @@ class SeismicReader:
         inline : numpy.ndarray of float32, shape: (n_xlines, n_samples)
             The specified inline, decompressed
         """
-        return self.loader.load_inline_chunk(64*(il_idx//64))[il_idx%64, :, :].copy()
-
+        return self.loader.load_inline_chunk(64*(il_idx//64))[il_idx % 64, :, :].copy()
 
     def read_crossline_number(self, xl_no):
         """Reads one crossline from ZGY file
@@ -112,7 +112,7 @@ class SeismicReader:
 
         Parameters
         ----------
-        xl_id : int
+        xl_idx : int
             The ordinal number of the crossline in the file
 
         Returns
@@ -122,13 +122,12 @@ class SeismicReader:
         """
         return self.loader.load_crossline_chunk(64 * (xl_idx // 64))[:, xl_idx % 64, :].copy()
 
-
     def read_zslice_coord(self, samp_no):
         """Reads one zslice from ZGY file (time or depth, depending on file contents)
 
         Parameters
         ----------
-        zslice_no : int
+        samp_no : int
             The sample time/depth to return a zslice from
 
         Returns
@@ -143,7 +142,7 @@ class SeismicReader:
 
         Parameters
         ----------
-        zslice_id : int
+        z_idx : int
             The ordinal number of the zslice in the file
 
         Returns
@@ -152,7 +151,6 @@ class SeismicReader:
             The specified zslice (time or depth, depending on file contents), decompressed
         """
         return self.loader.load_zslice_chunk(64 * (z_idx // 64))[:, :, z_idx % 64].copy()
-
 
     def read_subvolume(self, min_il, max_il, min_xl, max_xl, min_z, max_z):
         """Reads a sub-volume from ZGY file
@@ -174,9 +172,6 @@ class SeismicReader:
         max_z : int
             The index of the last time sample to get, non inclusive. To get one time sample, use max_z = min_z + 1
 
-        access_padding : bool, optional
-            Functions which manage voxels used for padding themselves may relax bounds-checking to padded dimensions
-
         Returns
         -------
         subvolume : numpy.ndarray of float32, shape (max_il - min_il, max_xl - min_xl, max_z - min_z)
@@ -185,7 +180,6 @@ class SeismicReader:
         buf = np.zeros((max_il-min_il, max_xl-min_xl, max_z-min_z), dtype=np.float32)
         self.filehandle.read((min_il, min_xl, min_z), buf)
         return buf
-
 
     def read_volume(self):
         """Reads the whole volume from ZGY file
@@ -198,7 +192,6 @@ class SeismicReader:
         return self.read_subvolume(0, self.n_ilines,
                                    0, self.n_xlines,
                                    0, self.n_samples)
-
 
     def get_trace(self, index):
         """Reads one trace from ZGY file
@@ -214,12 +207,11 @@ class SeismicReader:
             A single trace, decompressed
         """
         if not 0 <= index < self.n_ilines * self.n_xlines:
-            raise IndexError("Index {} is out of range, total traces is {}".format(index, self.n_ilines * self.n_xlines))
+            raise IndexError("Index {} is out of range, total traces is {}".format(index,
+                                                                                   self.n_ilines * self.n_xlines))
 
         il, xl = index // self.n_xlines, index % self.n_xlines
-        return self.loader.load_trace_chunk(64*(il//64), 64*(xl//64))[il%64, xl%64, :].copy()
-
-
+        return self.loader.load_trace_chunk(64*(il//64), 64*(xl//64))[il % 64, xl % 64, :].copy()
 
     def gen_trace_header(self, index):
         """Generates one trace header from ZGY file,
@@ -241,15 +233,24 @@ class SeismicReader:
 
         xl_coord, il_coord = index % self.n_xlines, index // self.n_xlines
 
-        header = bytearray(240)
-        header[70:72] = struct.pack(">h", -100) # A scalar of -100 is implicit in supplying UTM coordinates in cm
-        header[180:184] = struct.pack(">I", int(round(100.0 * (self.corners[0][0] + il_coord * self.easting_inc_il + xl_coord * self.easting_inc_xl)))) # CDP_X
-        header[184:188] = struct.pack(">I", int(round(100.0 * (self.corners[0][1] + il_coord * self.northing_inc_il + xl_coord * self.northing_inc_xl)))) # CDP_Y
-        header[188:192] = struct.pack(">I", int(self.annotstart[0] + il_coord * self.annotinc[0])) # INLINE_3D
-        header[192:196] = struct.pack(">I", int(self.annotstart[1] + xl_coord * self.annotinc[1])) # CROSSLINE_3D
+        cdp_x = int(round(100.0 * (self.corners[0][0]
+                                   + il_coord * self.easting_inc_il
+                                   + xl_coord * self.easting_inc_xl)))
+        cdp_y = int(round(100.0 * (self.corners[0][1]
+                                   + il_coord * self.northing_inc_il
+                                   + xl_coord * self.northing_inc_xl)))
 
-        header[114:116] = struct.pack(">H", self.n_samples) # Samples per trace
-        header[116:118] = struct.pack(">H", int(self.zinc * 1000)) # Sample interval (μs/m)
+        inline_3d = int(self.annotstart[0] + il_coord * self.annotinc[0])
+        crossline_3d = int(self.annotstart[1] + xl_coord * self.annotinc[1])
+
+        header = bytearray(240)
+        header[70:72] = struct.pack(">h", -100)  # A scalar of -100 is implicit in supplying UTM coordinates in cm
+        header[180:184] = struct.pack(">i", cdp_x)
+        header[184:188] = struct.pack(">i", cdp_y)
+        header[188:192] = struct.pack(">i", inline_3d)
+        header[192:196] = struct.pack(">i", crossline_3d)
+        header[114:116] = struct.pack(">H", self.n_samples)  # Samples per trace
+        header[116:118] = struct.pack(">H", int(self.zinc * 1000))  # Sample interval (μs/m)
 
         return segyio.segy.Field(header, kind='trace')
 
