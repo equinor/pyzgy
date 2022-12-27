@@ -23,7 +23,7 @@ Requires [**openzgy** package from Schlumberger](https://community.opengroup.org
 #### Use segyio-like interface to read ZGY files ####
 ```python
 import pyzgy
-with pyzgy.open("in.vds")) as zgyfile:
+with pyzgy.open("in.zgy")) as zgyfile:
     il_slice = zgyfile.iline[zgyfile.ilines[LINE_IDX]]
     xl_slice = zgyfile.xline[LINE_NUMBER]
     zslice = zgyfile.depth_slice[SLICE_IDX]
