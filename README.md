@@ -2,6 +2,7 @@
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Tests](https://github.com/equinor/pyzgy/actions/workflows/python-app.yml/badge.svg)](https://github.com/equinor/pyzgy/actions/workflows/python-app.yml)
+[![SCM Compliance](https://scm-compliance-api.radix.equinor.com/repos/equinor/pyzgy/badge)](https://scm-compliance-api.radix.equinor.com/repos/equinor/pyzgy/badge)
 [![PyPi Version](https://img.shields.io/pypi/v/pyzgy.svg)](https://pypi.org/project/pyzgy/)
 
 Convenience wrapper around Schlumberger's OpenZGY Python package which enables 
