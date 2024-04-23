@@ -13,6 +13,7 @@ def test_SeismicWriter(zgy_sgy_file_pairs, temp_dir):
         zinc = reader.zinc
         annotstart = reader.annotstart
         annotinc = reader.annotinc
+        corners = reader.corners
 
     ZGY_FILE_OUT = pathlib.Path(ZGY_FILE).name
 
@@ -22,9 +23,10 @@ def test_SeismicWriter(zgy_sgy_file_pairs, temp_dir):
                        zinc,
                        annotstart,
                        annotinc,
+                       corners=corners
                        ) as writer:
         writer.write_volume(data)
-        # write a sub-volme
+        # write a sub-volume to the same open file
         writer.write_subvolume(data[2:, 2:, 10:30], 2, 2, 10)
 
     # read back and check
@@ -34,3 +36,4 @@ def test_SeismicWriter(zgy_sgy_file_pairs, temp_dir):
         assert zinc == reader.zinc
         assert annotstart == reader.annotstart
         assert annotinc == reader.annotinc
+        assert corners == reader.corners
