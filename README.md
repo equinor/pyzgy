@@ -67,6 +67,8 @@ with SeismicWriter("out.zgy"
 ```
 
 #### Native access and writing with Xarray ####
+The Xarray Backend engine provides lazy loading support for the volume only. Opening large datasets should be possible, with sub-volume browsing using the native `xarray.Dataset.sel` method.
+
 ```python
 import xarray as xr
 
@@ -81,5 +83,8 @@ sub_vol = zgy.sel(
     xline=range(XLINE_START,XLINE_END),
     sample=range(SAMPLE_START,SAMPLE_END)
 )
+
+# write out to zgy file
+zgy.pyzgy.to_zgy("out.zgy")
 
 ```
