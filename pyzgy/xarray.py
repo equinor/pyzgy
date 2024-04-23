@@ -12,6 +12,7 @@ import os
 from openzgy.api import ZgyReader, SampleDataType, UnitDimension
 
 from .read import SeismicReader
+from .write import SeismicWriter
 
 
 @dataclass(order=True, frozen=True)
@@ -189,3 +190,155 @@ class PyzgyBackendEntrypoint(BackendEntrypoint):
         except TypeError:
             return False
         return ext in {".zgy"}
+
+@xr.register_dataset_accessor("pyzgy")
+class PyZGY:
+    def __init__(self, xarray_obj):
+        self._obj = xarray_obj
+        self._corners = None
+
+    def _check_variable_has_dims(self, data_variable, dims):
+        # test for malformed dataset
+        assert data_variable in self._obj
+        assert len(self._obj[data_variable].dims) == len(dims)
+        for dim in dims:
+            assert dim in self._obj.dims
+            assert dim in self._obj[data_variable].dims
+
+    def _check_regular_dim(self, dim):
+        # check that the dimensions increment regularly, ZGY doesn't support
+        # irregular sampling
+        assert np.ptp(self._obj[dim].diff(dim).values) == 0.0
+
+    def corners(self):
+        """Get the corner coordinates of the dataset from variables `cdp_x` and
+        `cdp_y`.
+
+        The order of the list is corners or per index of figure.
+            First inline / first crossline,
+            last inline / first crossline,
+            first inline / last crossline,
+            last inline / last crossline.
+
+        (1, iln, xl1)        (3, iln, xln)
+            ^
+            |
+            |
+            |
+            |
+            |
+            |______________________>
+        (0, il1, xl1)          (2, il1, xln)
+
+        Returns:
+        --------
+        corners: Tuple[Tuple[2]][4]
+        """
+        for coord in (CoordKeyField.cdp_x, CoordKeyField.cdp_y):
+            try:
+                self._check_variable_has_dims(coord, ("iline", "xline"))
+            except AssertionError as err:
+                err.args += ("Malformed coordinates variables", coord, )
+                raise
+
+        # create corners
+        il0, iln = self._obj["iline"][0].item(), self._obj["iline"][-1].item()
+        xl0, xln = self._obj["xline"][0].item(), self._obj["xline"][-1].item()
+        corner_list = ((il0, xl0), (iln, xl0), (il0, xln), (iln, xln))
+        return tuple(
+            (
+                self._obj[CoordKeyField.cdp_x].sel(iline=il, xline=xl).values.item(),
+                self._obj[CoordKeyField.cdp_y].sel(iline=il, xline=xl).values.item()
+            )
+            for (il, xl) in corner_list
+        )
+
+    def increment(self, dim):
+        """Calculate the increment of a dimension
+
+        Parameters
+        ----------
+        dim: str
+            The dimension to return the increment on.
+        """
+        self._check_regular_dim(dim)
+        # check for length 1 dimensions
+        if self._obj[dim].size > 2:
+            inc = self._obj[dim][1] - self._obj[dim][0]
+        else:
+            inc = 0
+        return inc
+
+    def to_zgy(self, filename, data_variable="data"):
+        """Output single variable to ZGY file.
+
+        Expects dimension names of `iline`, `xline` and `samples` for a 3D
+        volume to export. If `cdp_x` and `cdp_y` variables are available, they
+        will be used to determine the corner points of the ZGY volume.
+
+        If modifying the size of your dataset chunks, use multiples of 64. This is
+        the preferred block/brick size for ZGY.
+
+        Parameters
+        ----------
+        filename: str
+            The filename and path to write to.
+
+        data_variable: str
+            The name of the data volume variable to export, defaults to "data".
+        """
+        # test for malformed dataset
+        assert data_variable in self._obj
+        assert len(self._obj[data_variable].dims) == 3
+        for dim in ("iline", "xline", "samples"):
+            assert dim in self._obj.dims
+            assert dim in self._obj[data_variable].dims
+
+        zgy_dv = self._obj[data_variable].transpose("iline", "xline", "samples")
+        shape = zgy_dv.shape
+
+        # generate corners from cdp variables if they exist
+        if (
+            CoordKeyField.cdp_x in self._obj
+            and CoordKeyField.cdp_y in self._obj
+            ):
+            self._corners = self.corners()
+
+        # assumes that dimensions are not length 1
+        zinc = self.increment("samples")
+        annotinc = (self.increment("iline"), self.increment("xline"))
+
+        with SeismicWriter(
+            filename,
+            shape,
+            self._obj["samples"][0].item(),
+            zinc,
+            (self._obj["iline"][0].item(), self._obj["xline"][0].item()),
+            annotinc,
+            corners=self._corners
+        ) as writer:
+            if zgy_dv.chunks:
+                il_cx, xl_cx, s_cx = zgy_dv.chunks
+                for i, j, k in itertools.product(
+                    range(0, len(il_cx)), # iterate iline
+                    range(0, len(xl_cx)), # iterate xline
+                    range(0, len(s_cx)), # iterate samples
+                    ):
+                    istart = sum(il_cx[:i])
+                    jstart = sum(xl_cx[:j])
+                    kstart = sum(s_cx[:k])
+                    irange = np.arange(istart, istart + il_cx[i])
+                    jrange = np.arange(jstart, jstart + xl_cx[j])
+                    krange = np.arange(kstart, kstart + s_cx[k])
+                    writer.write_subvolume(
+                        zgy_dv.isel(
+                            iline=irange,
+                            xline=jrange,
+                            samples=krange
+                        ).values, istart, jstart, kstart
+                    )
+            else:
+                writer.write_subvolume(
+                    zgy_dv.values,
+                    0, 0, 0
+                )
