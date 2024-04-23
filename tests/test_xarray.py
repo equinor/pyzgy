@@ -33,12 +33,8 @@ def test_xarray_geometry(zgyfile_pairs):
         assert ds.samples.dtype == sgyfile.samples.dtype
 
 
-@pytest.mark.parametrize(
-    "zgyfile_pairs",
-    ZGY_SGY_FILE_PAIRS,
-)
-def test_xarray_data(zgyfile_pairs):
-    ZGY_FILE, SGY_FILE = zgyfile_pairs
+def test_xarray_data(zgy_sgy_file_pairs):
+    ZGY_FILE, SGY_FILE = zgy_sgy_file_pairs
     ds = xr.open_dataset(ZGY_FILE)
 
     with segyio.open(SGY_FILE) as sgyfile:
@@ -56,12 +52,8 @@ def test_xarray_data(zgyfile_pairs):
             assert np.allclose(slice_zgy.data, slice_segy, rtol=1e-5)
 
 
-@pytest.mark.parametrize(
-    "zgyfile_pairs",
-    ZGY_SGY_FILE_PAIRS,
-)
-def test_preferred_chunks(zgyfile_pairs):
-    ZGY_FILE, SGY_FILE = zgyfile_pairs
+def test_preferred_chunks(zgy_sgy_file_pairs):
+    ZGY_FILE, SGY_FILE = zgy_sgy_file_pairs
     ds = xr.open_dataset(ZGY_FILE, chunks={})
 
     # small files reads all data
