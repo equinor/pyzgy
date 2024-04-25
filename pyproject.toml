@@ -7,7 +7,7 @@ authors = [
 description = "Convenience wrapper around OpenZGY Python implementation"
 readme = {file = "README.rst", content-type = "text/markdown"}
 dependencies = [
-    "numpy>=1.20", "segyio", "xarray"
+    "numpy>=1.20", "segyio", "xarray", "dask"
 ]
 requires-python = ">=3.8"
 license = {file = "LICENSE.txt"}
