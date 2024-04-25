@@ -9,7 +9,7 @@ readme = {file = "README.rst", content-type = "text/markdown"}
 dependencies = [
     "numpy>=1.20", "segyio", "xarray", "dask"
 ]
-requires-python = ">=3.8"
+requires-python = ">=3.9"
 license = {file = "LICENSE.txt"}
 classifiers = [
     "License :: OSI Approved :: Apache Software License"
