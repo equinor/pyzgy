@@ -1,7 +1,6 @@
 import itertools
 from dataclasses import dataclass
-from typing import Any, Dict, Tuple, List
-from enum import Enum
+from typing import Union
 
 import numpy as np
 import xarray as xr
@@ -139,8 +138,8 @@ class PyzgyBackendEntrypoint(BackendEntrypoint):
                 "xline": reader.xlines,
             }
             dims_vert = {"samples": reader.samples}
-
-            ds = xr.Dataset(coords=dims | dims_vert)
+            dims.update(dims_vert)
+            ds = xr.Dataset(coords=dims)
 
             # load attributes
             ds.attrs[AttrKeyField.source_file] = str(filename_or_obj)
@@ -163,8 +162,8 @@ class PyzgyBackendEntrypoint(BackendEntrypoint):
 
     def open_dataset(
         self,
-        filename_or_obj: str | os.PathLike,
-        drop_variables: tuple[str] | None = None,
+        filename_or_obj: Union[str, os.PathLike],
+        drop_variables: Union[tuple[str], None] = None,
     ):
         zgy_shape, ds = self._create_geometry_ds(filename_or_obj)
         backend_array = ZgyBackendArray(
@@ -184,7 +183,7 @@ class PyzgyBackendEntrypoint(BackendEntrypoint):
         ds["data"] = xr.Variable(ds.dims, data, encoding=encoding)
         return ds
 
-    def guess_can_open(self, filename_or_obj: str | os.PathLike):
+    def guess_can_open(self, filename_or_obj: Union[str, os.PathLike]):
         try:
             _, ext = os.path.splitext(filename_or_obj)
         except TypeError:
