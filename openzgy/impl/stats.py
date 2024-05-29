@@ -45,7 +45,7 @@ class StatisticData:
         """
         if not isinstance(value, np.ndarray):
             raise TypeError("Only numpy arrays accepted when adding statistics.")
-        valid = np.isfinite(value).astype(np.bool)
+        valid = np.isfinite(value).astype(bool)
         scnt = np.count_nonzero(valid)
         sinf = np.count_nonzero(valid == False)
         if sinf == 0: valid = True

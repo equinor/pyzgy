@@ -213,6 +213,48 @@ class SeismicReader:
         il, xl = index // self.n_xlines, index % self.n_xlines
         return self.loader.load_trace_chunk(64*(il//64), 64*(xl//64))[il % 64, xl % 64, :].copy()
 
+    def gen_cdp_x(self, il_coord, xl_coord):
+        """Generates the CDP X coordinate from an iline and xline pair.
+
+        Parameters
+        ----------
+        il_coord : int
+           The iline index of the cube.
+        xl_coord : int
+           The xline index of the cube.
+
+        Returns
+        -------
+        cdp_x : float
+            The corresponding cartesian x coordinate
+        """
+        return (
+            self.corners[0][0]
+            + il_coord * self.easting_inc_il
+            + xl_coord * self.easting_inc_xl
+        )
+
+    def gen_cdp_y(self, il_coord, xl_coord):
+        """Generates the CDP Y coordinate from an iline and xline pair.
+
+        Parameters
+        ----------
+        il_coord : int
+           The iline index of the cube.
+        xl_coord : int
+           The xline index of the cube.
+
+        Returns
+        -------
+        cdp_y : float
+            The corresponding cartesian y coordinate
+        """
+        return (
+            self.corners[0][0]
+            + il_coord * self.northing_inc_il
+            + xl_coord * self.northing_inc_xl
+        )
+
     def gen_trace_header(self, index):
         """Generates one trace header from ZGY file,
         note that only a few SEG-Y header values can be
@@ -233,12 +275,8 @@ class SeismicReader:
 
         xl_coord, il_coord = index % self.n_xlines, index // self.n_xlines
 
-        cdp_x = int(round(100.0 * (self.corners[0][0]
-                                   + il_coord * self.easting_inc_il
-                                   + xl_coord * self.easting_inc_xl)))
-        cdp_y = int(round(100.0 * (self.corners[0][1]
-                                   + il_coord * self.northing_inc_il
-                                   + xl_coord * self.northing_inc_xl)))
+        cdp_x = int(round(100.0 * self.gen_cdp_x(il_coord, xl_coord)))
+        cdp_y = int(round(100.0 * self.gen_cdp_y(il_coord, xl_coord)))
 
         inline_3d = int(self.annotstart[0] + il_coord * self.annotinc[0])
         crossline_3d = int(self.annotstart[1] + xl_coord * self.annotinc[1])

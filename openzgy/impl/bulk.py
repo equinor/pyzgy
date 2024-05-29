@@ -1161,7 +1161,7 @@ class ZgyInternalBulk:
                 self._sample_min = min(self._sample_min, tmp_min)
                 self._sample_max = max(self._sample_max, tmp_max)
         else:
-            valid = np.isfinite(data).astype(np.bool)
+            valid = np.isfinite(data).astype(bool)
             self._sample_min = np.amin(data, where=valid, initial=self._sample_min)
             self._sample_max = np.amax(data, where=valid, initial=self._sample_max)
 

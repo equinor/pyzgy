@@ -1,6 +1,7 @@
 from collections.abc import Mapping
 
 from .read import SeismicReader
+from .write import SeismicWriter
 
 class Accessor(SeismicReader):
 

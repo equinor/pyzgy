@@ -6,53 +6,49 @@ from pyzgy.read import SeismicReader
 from openzgy.exception import ZgyUserError
 
 
-ZGY_SGY_FILE_PAIRS = [('test_data/small-{}bit.zgy'.format(n),
-                       'test_data/small-{}bit.sgy'.format(n))
-                      for n in [32, 16, 8]]
-
-def test_read_ilines_list():
-    for ZGY_FILE, SGY_FILE in ZGY_SGY_FILE_PAIRS:
-        reader = SeismicReader(ZGY_FILE)
-        with segyio.open(SGY_FILE) as sgyfile:
-            assert np.all(reader.ilines == sgyfile.ilines)
+def test_read_ilines_list(zgy_sgy_file_pairs):
+    ZGY_FILE, SGY_FILE = zgy_sgy_file_pairs
+    reader = SeismicReader(ZGY_FILE)
+    with segyio.open(SGY_FILE) as sgyfile:
+        assert np.all(reader.ilines == sgyfile.ilines)
 
 
-def test_read_xlines_list():
-    for ZGY_FILE, SGY_FILE in ZGY_SGY_FILE_PAIRS:
-        reader = SeismicReader(ZGY_FILE)
-        with segyio.open(SGY_FILE) as sgyfile:
-            assert np.all(reader.xlines == sgyfile.xlines)
+def test_read_xlines_list(zgy_sgy_file_pairs):
+    ZGY_FILE, SGY_FILE = zgy_sgy_file_pairs
+    reader = SeismicReader(ZGY_FILE)
+    with segyio.open(SGY_FILE) as sgyfile:
+        assert np.all(reader.xlines == sgyfile.xlines)
 
 
-def test_read_samples_list():
-    for ZGY_FILE, SGY_FILE in ZGY_SGY_FILE_PAIRS:
-        reader = SeismicReader(ZGY_FILE)
-        with segyio.open(SGY_FILE) as sgyfile:
-            assert np.all(reader.samples == sgyfile.samples)
+def test_read_samples_list(zgy_sgy_file_pairs):
+    ZGY_FILE, SGY_FILE = zgy_sgy_file_pairs
+    reader = SeismicReader(ZGY_FILE)
+    with segyio.open(SGY_FILE) as sgyfile:
+        assert np.all(reader.samples == sgyfile.samples)
 
 
-def test_read_ilines_datatype():
-    for ZGY_FILE, SGY_FILE in ZGY_SGY_FILE_PAIRS:
-        reader = SeismicReader(ZGY_FILE)
-        with segyio.open(SGY_FILE) as sgyfile:
-            assert reader.ilines.dtype == sgyfile.ilines.dtype
-            assert reader.ilines.ndim == 1
+def test_read_ilines_datatype(zgy_sgy_file_pairs):
+    ZGY_FILE, SGY_FILE = zgy_sgy_file_pairs
+    reader = SeismicReader(ZGY_FILE)
+    with segyio.open(SGY_FILE) as sgyfile:
+        assert reader.ilines.dtype == sgyfile.ilines.dtype
+        assert reader.ilines.ndim == 1
 
 
-def test_read_xlines_datatype():
-    for ZGY_FILE, SGY_FILE in ZGY_SGY_FILE_PAIRS:
-        reader = SeismicReader(ZGY_FILE)
-        with segyio.open(SGY_FILE) as sgyfile:
-            assert reader.xlines.dtype == sgyfile.xlines.dtype
-            assert reader.xlines.ndim == 1
+def test_read_xlines_datatype(zgy_sgy_file_pairs):
+    ZGY_FILE, SGY_FILE = zgy_sgy_file_pairs
+    reader = SeismicReader(ZGY_FILE)
+    with segyio.open(SGY_FILE) as sgyfile:
+        assert reader.xlines.dtype == sgyfile.xlines.dtype
+        assert reader.xlines.ndim == 1
 
 
-def test_read_samples_datatype():
-    for ZGY_FILE, SGY_FILE in ZGY_SGY_FILE_PAIRS:
-        reader = SeismicReader(ZGY_FILE)
-        with segyio.open(SGY_FILE) as sgyfile:
-            assert reader.samples.dtype == sgyfile.samples.dtype
-            assert reader.samples.ndim == 1
+def test_read_samples_datatype(zgy_sgy_file_pairs):
+    ZGY_FILE, SGY_FILE = zgy_sgy_file_pairs
+    reader = SeismicReader(ZGY_FILE)
+    with segyio.open(SGY_FILE) as sgyfile:
+        assert reader.samples.dtype == sgyfile.samples.dtype
+        assert reader.samples.ndim == 1
 
 
 def compare_inline(zgy_filename, sgy_filename, lines, tolerance):
@@ -74,10 +70,10 @@ def compare_inline_number(zgy_filename, sgy_filename, line_coords, tolerance):
         assert slice_zgy.ndim == 2
 
 
-def test_read_inline():
-    for ZGY_FILE, SGY_FILE in ZGY_SGY_FILE_PAIRS:
-        compare_inline(ZGY_FILE, SGY_FILE, 5, tolerance=1e-5)
-        compare_inline_number(ZGY_FILE, SGY_FILE, [1, 2, 3, 4, 5], tolerance=1e-5)
+def test_read_inline(zgy_sgy_file_pairs):
+    ZGY_FILE, SGY_FILE = zgy_sgy_file_pairs
+    compare_inline(ZGY_FILE, SGY_FILE, 5, tolerance=1e-5)
+    compare_inline_number(ZGY_FILE, SGY_FILE, [1, 2, 3, 4, 5], tolerance=1e-5)
 
 
 def compare_crossline(zgy_filename, sgy_filename, lines, tolerance):
@@ -100,10 +96,10 @@ def compare_crossline_number(zgy_filename, sgy_filename, line_coords, tolerance)
         assert slice_zgy.ndim == 2
 
 
-def test_read_crossline():
-    for ZGY_FILE, SGY_FILE in ZGY_SGY_FILE_PAIRS:
-        compare_crossline(ZGY_FILE, SGY_FILE, 5, tolerance=1e-5)
-        compare_crossline_number(ZGY_FILE, SGY_FILE, [20, 21, 22, 23, 24], tolerance=1e-5)
+def test_read_crossline(zgy_sgy_file_pairs):
+    ZGY_FILE, SGY_FILE = zgy_sgy_file_pairs
+    compare_crossline(ZGY_FILE, SGY_FILE, 5, tolerance=1e-5)
+    compare_crossline_number(ZGY_FILE, SGY_FILE, [20, 21, 22, 23, 24], tolerance=1e-5)
 
 
 def compare_zslice(zgy_filename, sgy_filename, tolerance):
@@ -122,10 +118,11 @@ def compare_zslice_coord(zgy_filename, sgy_filename, tolerance):
             slice_segy = segyfile.depth_slice[slice_index]
             assert np.allclose(slice_zgy, slice_segy, rtol=tolerance)
 
-def test_read_zslice():
-    for ZGY_FILE, SGY_FILE in ZGY_SGY_FILE_PAIRS:
-        compare_zslice(ZGY_FILE, SGY_FILE, tolerance=1e-5)
-        compare_zslice_coord(ZGY_FILE, SGY_FILE,  tolerance=1e-5)
+
+def test_read_zslice(zgy_sgy_file_pairs):
+    ZGY_FILE, SGY_FILE = zgy_sgy_file_pairs
+    compare_zslice(ZGY_FILE, SGY_FILE, tolerance=1e-5)
+    compare_zslice_coord(ZGY_FILE, SGY_FILE,  tolerance=1e-5)
 
 
 def compare_subvolume(zgy_filename, sgy_filename, tolerance):
@@ -138,9 +135,10 @@ def compare_subvolume(zgy_filename, sgy_filename, tolerance):
     vol_segy = segyio.tools.cube(sgy_filename)[min_il:max_il, min_xl:max_xl, min_z:max_z]
     assert np.allclose(vol_zgy, vol_segy, rtol=tolerance)
 
-def test_read_subvolume():
-    for ZGY_FILE, SGY_FILE in ZGY_SGY_FILE_PAIRS:
-        compare_subvolume(ZGY_FILE, SGY_FILE, tolerance=1e-5)
+
+def test_read_subvolume(zgy_sgy_file_pairs):
+    ZGY_FILE, SGY_FILE = zgy_sgy_file_pairs
+    compare_subvolume(ZGY_FILE, SGY_FILE, tolerance=1e-5)
 
 
 def compare_volume(zgy_filename, sgy_filename, tolerance):
@@ -148,13 +146,15 @@ def compare_volume(zgy_filename, sgy_filename, tolerance):
     vol_segy = segyio.tools.cube(sgy_filename)
     assert np.allclose(vol_zgy, vol_segy, rtol=tolerance)
 
-def test_read_volume():
-    for ZGY_FILE, SGY_FILE in ZGY_SGY_FILE_PAIRS:
-        compare_volume(ZGY_FILE, SGY_FILE, tolerance=1e-5)
 
-def test_file_close():
+def test_read_volume(zgy_sgy_file_pairs):
+    ZGY_FILE, SGY_FILE = zgy_sgy_file_pairs
+    compare_volume(ZGY_FILE, SGY_FILE, tolerance=1e-5)
+
+
+def test_file_close(zgy_sgy_file_pairs):
     with pytest.raises(ZgyUserError):
-        zgy_filename, _ = ZGY_SGY_FILE_PAIRS[0]
+        zgy_filename, _ = zgy_sgy_file_pairs
         zgy_file = SeismicReader(zgy_filename)
         zgy_file.close()
         zgy_file.read_volume()

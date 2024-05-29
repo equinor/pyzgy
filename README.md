@@ -8,6 +8,7 @@
 Convenience wrapper around Schlumberger's OpenZGY Python package which enables 
 reading of ZGY files with a syntax familiar to users of segyio.
 
+The package also includes native support for loading and writing of ZGY data using Xarray.
 ---
 
 ### Installation
@@ -40,7 +41,50 @@ with SeismicReader("in.zgy") as reader:
     inline_slice = reader.read_inline_number(LINE_NUMBER)
     crossline_slice = reader.read_crossline(LINE_IDX)
     z_slice = reader.read_zslice_coord(SLICE_COORD)
-    sub_vol = reader.read_subvolume(min_il=min_il, max_il=max_il,
-                                    min_xl=min_xl, max_xl=max_xl,
-                                    min_z=min_z, max_z=max_z)
+    sub_vol = reader.read_subvolume(
+        min_il=min_il, max_il=max_il,
+        min_xl=min_xl, max_xl=max_xl,
+        min_z=min_z, max_z=max_z
+    )
+```
+
+#### Write a ZGY file with underlying function ####
+```python
+import numpy as np
+from pyzgy.accessors import SeismicWriter
+
+# create a dummy 10x10x10 cube
+data = np.zeros((10, 10, 10))
+
+with SeismicWriter("out.zgy"
+    data.shape,
+    0.0, # the first sample
+    4.0, # the sample increment
+    (100, 100), # the first iline and xline labels
+    (1, 2), # the iline and xline increments
+    ) as writer:
+        writer.write_volume(data)
+```
+
+#### Native access and writing with Xarray ####
+The Xarray Backend engine provides lazy loading support for the volume only. Opening large datasets should be possible, with sub-volume browsing using the native `xarray.Dataset.sel` method.
+
+```python
+import xarray as xr
+
+# read a zgy file
+zgy = xr.open_dataset("int.zgy")
+inline_slice = zgy.sel(iline=LINE_NUMBER)
+crossline_slice = zgy.sel(xline=XLINE_NUMBER)
+z_slice = zgy.sel(sample=SAMPLE_VALUE)
+
+sub_vol = zgy.sel(
+    iline=range(LINE_START,LINE_END),
+    xline=range(XLINE_START,XLINE_END),
+    sample=range(SAMPLE_START,SAMPLE_END)
+)
+
+# write out to zgy file
+zgy.pyzgy.to_zgy("out.zgy")
+
 ```
