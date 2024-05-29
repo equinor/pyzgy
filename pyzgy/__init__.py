@@ -1,5 +1,6 @@
 from .open import open
 from .tools import cube
+from .xarray import PyZGY
 
 # Copyright 2021, Equinor
 #

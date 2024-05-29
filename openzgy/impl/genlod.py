@@ -51,9 +51,9 @@ def _make_blocksizes(bricksize, surveysize, nlods, dtype, factor=(1,1,1), verbos
     for lod in range(nlods):
         bs = np.minimum(bs, ss)
         blocksizes[lod] = bs
-        iterations += np.product((ss+bs-1) // bs)
+        iterations += np.prod((ss+bs-1) // bs)
         ss = (ss + 1) // 2
-    bytesused = np.sum(np.product(blocksizes, axis=1)) * int(np.dtype(dtype).itemsize)
+    bytesused = np.sum(np.prod(blocksizes, axis=1)) * int(np.dtype(dtype).itemsize)
     returntype = namedtuple("BlockSizeInfo", "blocksizes bytesused iterations")
     result = returntype(blocksizes, bytesused, iterations)
     print(result)
@@ -140,7 +140,7 @@ class GenLodBase:
         sz = np.array(size, dtype=np.int64)
         while np.any(sz > bs):
             _nlods += 1
-            _total += np.product((sz + bs - 1) // bs)
+            _total += np.prod((sz + bs - 1) // bs)
             sz = (sz + 1) // 2
         assert nlods is None or nlods == _nlods
         self._surveysize = np.array(size, dtype=np.int64)
@@ -172,7 +172,7 @@ class GenLodBase:
         _total done in __init__ might need to change.
         """
         if data is not None:
-            count = np.product((np.array(data.shape, dtype=np.int64) +
+            count = np.prod((np.array(data.shape, dtype=np.int64) +
                                 self._bricksize - 1) // self._bricksize)
             self._done += count
         if self._progress and not self._progress(self._done, self._total):
@@ -256,7 +256,7 @@ class GenLodImpl(GenLodBase):
             return
         factor = 1
         if isinstance(data, ScalarBuffer):
-            factor = np.product(data.shape, dtype=np.int64)
+            factor = np.prod(data.shape, dtype=np.int64)
             data = np.array([data.value], dtype=data.dtype)
         self._stats.add(data, factor)
         self._histo.add(data, factor)
