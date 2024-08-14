@@ -80,8 +80,8 @@ def slurp_open_file(r, progress):
     # No more than 1024 MVoxel to avoid running out of memory (and time).
     # TODO-Low, would be nice to crop both inline and crossline range
     # to have less likelyhood of dead traces.
-    print("BS", np.product(blocksize) // (1024*1024), "MB, count", total)
-    have_room = 1024*1024*1024 // np.product(blocksize)
+    print("BS", np.prod(blocksize) // (1024*1024), "MB, count", total)
+    have_room = 1024*1024*1024 // np.prod(blocksize)
     new_total = min(total, max(have_room, 1))
     first_il = ((total - new_total) // 2) * blocksize[0]
     print("Adjust il count from start 0 count {0} to start {1} count {2}".format(total, first_il, new_total))
@@ -130,7 +130,7 @@ def slurp(filename):
     starttime = time.time()
     with ZgyReader(filename, iocontext = SDCredentials()) as r:
         blocks = slurp_open_file(r, progress=ProgressWithDots())
-        bricksize_in_bytes = int(np.product(r.bricksize) * 4)
+        bricksize_in_bytes = int(np.prod(r.bricksize) * 4)
     r_time = time.time() - starttime
 
     for b in blocks:

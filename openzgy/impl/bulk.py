@@ -441,7 +441,7 @@ class ZgyInternalBulk:
         Get the size of an uncompressed brick in bytes.
         TODO-Performance, this should be cached on file open and
         should probably be a derived attribute of self._metadata._ih.
-        NOTE-Performance: np.product() might be preferable to spelling out
+        NOTE-Performance: np.prod() might be preferable to spelling out
         the multiply and needing a temp. But it could be 100 times slower.
         """
         file_dtype = np.dtype(impl_enum._map_DataTypeToNumpyType(self._metadata._ih._datatype))
@@ -629,7 +629,7 @@ class ZgyInternalBulk:
             if onebrick is None:
                 raise ZgyFormatError("Compression type not recognized")
         elif brickstatus == impl_enum.BrickStatus.Normal:
-            if len(raw) != np.product(self._metadata._ih._bricksize) * np.dtype(file_dtype).itemsize:
+            if len(raw) != np.prod(self._metadata._ih._bricksize) * np.dtype(file_dtype).itemsize:
                 raise ZgyFormatError("Got wrong count when reading brick.")
             onebrick = np.frombuffer(raw, dtype=file_dtype)
             # Instead of describing the array as explicitly little-endian
