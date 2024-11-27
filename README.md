@@ -88,3 +88,6 @@ sub_vol = zgy.sel(
 zgy.pyzgy.to_zgy("out.zgy")
 
 ```
+
+## Contributing
+Contributions welcomed, whether you are reporting or fixing a bug, implementing or requesting a feature. Either make a github issue or fork the project and make a pull request. Please extend the unit tests with relevant passing/failing tests, run these as: `python -m pytest`
