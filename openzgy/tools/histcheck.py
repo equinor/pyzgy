@@ -22,7 +22,7 @@ def scanForRange(reader, verbose = False):
     valuerange = (np.nanmin(realmin), np.nanmax(realmax))
     print("VALUE RANGE", valuerange)
     elapsed = time() - begtime
-    voxels = np.product(reader.size) / (1024*1024)
+    voxels = np.prod(reader.size) / (1024*1024)
     print("  {0:.1f} MVoxel read in {1:.1f} sec, {2:.1f} Mvoxel/s".format(
         voxels, elapsed, voxels/elapsed))
     return valuerange
@@ -43,7 +43,7 @@ def scanForHistogram(reader, valuerange, verbose = False):
         else:
             hh += h[0]
     elapsed = time() - begtime
-    voxels = np.product(reader.size) / (1024*1024)
+    voxels = np.prod(reader.size) / (1024*1024)
     print("  {0:.1f} MVoxel read in {1:.1f} sec, {2:.1f} Mvoxel/s".format(
         voxels, elapsed, voxels/elapsed))
     return hh

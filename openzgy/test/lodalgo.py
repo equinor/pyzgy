@@ -87,7 +87,7 @@ def testLodAlgorithms():
 
 def testLowpassLodAlgorithm():
     bricksize = (64, 64, 64)
-    b0 = np.arange(np.product(bricksize), dtype=np.float64).reshape(bricksize)
+    b0 = np.arange(np.prod(bricksize), dtype=np.float64).reshape(bricksize)
     #b0.fill(42)
     bricks = _make8(b0, None) # TODO-Test also test NaN handling?
     lowpass = decimate8(bricks, DecimationType.LowPass)

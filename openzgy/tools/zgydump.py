@@ -72,7 +72,7 @@ def summary_normal_size(reader, *, header = True):
     bytespersample = {SampleDataType.int8:  1,
                       SampleDataType.int16: 2,
                       SampleDataType.float: 4}[reader.datatype]
-    bytesperbrick = np.product(reader.bricksize) * bytespersample
+    bytesperbrick = np.prod(reader.bricksize) * bytespersample
     colsize = (reader.size[2] + reader.bricksize[2] - 1) // reader.bricksize[2]
     bytespercolumn = bytesperbrick * colsize
     fmt = "{0:30s} = LOD0: {1} {2} MB column {3} {4} MB brick {5}"
@@ -147,7 +147,7 @@ def run(filename, options):
             summary_normal_size(reader, header=False)
             return
         args = dict(name=filename,
-                    nsamples=np.product(reader.size),
+                    nsamples=np.prod(reader.size),
                     r=reader)
         #print(_brief_info.format(**args))
         for line in _brief_info.split('\n'):

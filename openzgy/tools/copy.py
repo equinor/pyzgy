@@ -169,12 +169,12 @@ def timing_report(writer, elapsed):
     bs = np.array(writer.bricksize, dtype=np.int64)
     size = np.array(writer.size, dtype=np.int64)
     paddedsize = ((size + bs - 1) // bs) * bs
-    bandwidth = np.product(paddedsize) / elapsed # should I use size or padsize?
+    bandwidth = np.prod(paddedsize) / elapsed # should I use size or padsize?
     bandwidth /= (1024*1024)
     print("Elapsed {0:7.2f} seconds, bandwidth {1:6.2f} MVoxel/s copying {2} {3} samples, exact {4:.0f} MVoxel, padded {5:.0f} MVoxel".format(
         elapsed, bandwidth, writer.datatype, tuple(size),
-        np.product(size) / (1024*1024),
-        np.product(paddedsize) / (1024*1024)))
+        np.prod(size) / (1024*1024),
+        np.prod(paddedsize) / (1024*1024)))
 
 def parseints(s):
     return tuple(map(int,s.split(",")))
