@@ -66,7 +66,7 @@ def _readall_1(surveysize, blocksize, dtype, readfn):
     """
     data  = np.zeros(blocksize, dtype=dtype) if readfn else None
     done  = np.int64(0)
-    total = np.product(surveysize)
+    total = np.prod(surveysize)
 
     for ii in range(0, surveysize[0], blocksize[0]):
         for jj in range(0, surveysize[1], blocksize[1]):
@@ -76,9 +76,9 @@ def _readall_1(surveysize, blocksize, dtype, readfn):
                 view = data[:count[0],:count[1],:count[2]] if data is not None else None
                 #print("Reading", start, count, view.shape)
                 if readfn: readfn(start, view)
-                done += np.product(count)
+                done += np.prod(count)
                 yield start, count, view
-    assert done == np.product(surveysize)
+    assert done == np.prod(surveysize)
 
 def _readall_2(surveysize, blocksize, chunksize, dtype, readfn, progress):
     """
@@ -86,7 +86,7 @@ def _readall_2(surveysize, blocksize, chunksize, dtype, readfn, progress):
     All numeric and array parameters use numpy types.
     """
     done  = np.int64(0)
-    total = np.product(surveysize)
+    total = np.prod(surveysize)
     # Give a chance to abort before we even start.
     if progress and not progress(done, total): return
     alldata = _readall_1(surveysize=surveysize,
@@ -103,12 +103,12 @@ def _readall_2(surveysize, blocksize, chunksize, dtype, readfn, progress):
                     end   = np.minimum(start + chunksize, datasize)
                     count = end - start
                     view = data[start[0]:end[0],start[1]:end[1],start[2]:end[2]] if data is not None else None
-                    done += np.product(count)
+                    done += np.prod(count)
                     yield datastart + start, count, view
         # After yielding, give a chance to abort before the next read.
         # Also makes sure the final done==total is sent.
         if progress and not progress(done, total): return
-    assert done == np.product(surveysize)
+    assert done == np.prod(surveysize)
 
 def _readall_3(surveysize, bricksize, blocksize, chunksize, dtype, readfn, maxbytes, progress):
     """
@@ -125,7 +125,7 @@ def _readall_3(surveysize, bricksize, blocksize, chunksize, dtype, readfn, maxby
     blocksize[blocksize==0] = surveysize[blocksize==0]
     chunksize[chunksize==0] = blocksize[chunksize==0]
     if False:
-        fmt = lambda x: "{0} = {1} voxels, {2:.1f} MB".format(str(tuple(x)), np.product(x), np.product(x) * dtype.itemsize/(1024*1024))
+        fmt = lambda x: "{0} = {1} voxels, {2:.1f} MB".format(str(tuple(x)), np.prod(x), np.prod(x) * dtype.itemsize/(1024*1024))
         print("survey", fmt(surveysize), "of", np.dtype(dtype).name)
         print("brick ", fmt(bricksize))
         print("block ", fmt(blocksize))

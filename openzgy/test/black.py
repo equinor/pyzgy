@@ -2720,14 +2720,14 @@ def testCloudConsolidateBricks(filename, *, verbose = False):
                               _debug_trace = trace
     )
     bricksize = np.array((64, 64, 64), dtype=np.int64)
-    brick = np.product(bricksize) * np.dtype(np.float32).itemsize
+    brick = np.prod(bricksize) * np.dtype(np.float32).itemsize
     size = np.array((181, 241, 169), dtype=np.int64)
     numbricks = (size + bricksize - 1) // bricksize
     vprint("Creating. Expect header written twice, then bulk data once.")
     with newzgy.ZgyWriter(filename, iocontext=iocontext,
                           bricksize = tuple(bricksize),
                           size = tuple(size)) as writer:
-        data = np.arange(np.product(size), dtype=np.float32).reshape(size)
+        data = np.arange(np.prod(size), dtype=np.float32).reshape(size)
         writer.write((0,0,0), data)
 
     # lod 0 bricks: 3 * 4 * 3 = 36
@@ -2869,14 +2869,14 @@ def testCloudConsolidateBricks(filename, *, verbose = False):
                               segsize=7, _debug_trace = trace
     )
     bricksize = np.array((64, 64, 64), dtype=np.int64)
-    brick = np.product(bricksize) * np.dtype(np.float32).itemsize
+    brick = np.prod(bricksize) * np.dtype(np.float32).itemsize
     size = np.array((181, 241, 169), dtype=np.int64)
     numbricks = (size + bricksize - 1) // bricksize
     vprint("Creating. Expect header written twice and bulk data in 7 parts.")
     with newzgy.ZgyWriter(filename, iocontext=iocontext,
                           bricksize = tuple(bricksize),
                           size = tuple(size)) as writer:
-        data = np.arange(np.product(size), dtype=np.float32).reshape(size)
+        data = np.arange(np.prod(size), dtype=np.float32).reshape(size)
         writer.write((0,0,0), data)
 
     # There may be several reads needed to generate lod 1 bricks

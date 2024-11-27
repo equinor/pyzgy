@@ -37,7 +37,7 @@ def read_data_b_at_a_time(reader, lod, start, size):
 def timing_report(reader, lod, start, size, elapsed):
     bs = np.array(reader.bricksize if isinstance(reader, newzgy.ZgyReader) else (64, 64, 64), dtype=np.int64)
     padsize = ((np.array(size, np.int64) + bs - 1) // bs) * bs
-    bandwidth = np.product(padsize) / elapsed # should I use size or padsize?
+    bandwidth = np.prod(padsize) / elapsed # should I use size or padsize?
     bandwidth /= (1024*1024)
     print("Elapsed {0:6.2f} seconds, bandwidth {1:6.2f} MVoxel/s reading {2} lod {3} size {4} start {5}".format(elapsed, bandwidth, reader.datatype, lod, tuple(size), tuple(start)))
 
