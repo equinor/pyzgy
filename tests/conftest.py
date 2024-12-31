@@ -12,8 +12,10 @@ def temp_dir(tmpdir_factory):
     ("test_data/small-32bit.zgy", "test_data/small-32bit.sgy"),
     ("test_data/small-16bit.zgy", "test_data/small-16bit.sgy"),
     ("test_data/small-8bit.zgy", "test_data/small-8bit.sgy"),
+    ("test_data/small-32bit_translated.zgy", "test_data/small-32bit_translated.sgy"),
+    ("test_data/small-32bit_rotated.zgy", "test_data/small-32bit_rotated.sgy"),
     ],
-    ids=["32bit", "16bit", "8bit"],
+    ids=["32bit", "16bit", "8bit", "translated", "rotated"],
     scope="session")
 def zgy_sgy_file_pairs(request):
     return request.param
