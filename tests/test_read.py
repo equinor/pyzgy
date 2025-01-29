@@ -158,3 +158,18 @@ def test_file_close(zgy_sgy_file_pairs):
         zgy_file = SeismicReader(zgy_filename)
         zgy_file.close()
         zgy_file.read_volume()
+
+
+def compare_trace_header(zgy_filename, sgy_filename):
+    reader = SeismicReader(zgy_filename)
+    with segyio.open(sgy_filename) as sgyfile:
+        for trace_number in range(25):
+            sgz_header = reader.gen_trace_header(trace_number)
+            sgy_header = sgyfile.header[trace_number]
+            for pos in [181, 185]:
+                assert sgz_header[pos] == sgy_header[pos]
+
+
+def test_read_trace_header(zgy_sgy_file_pairs):
+    ZGY_FILE, SGY_FILE = zgy_sgy_file_pairs
+    compare_trace_header(ZGY_FILE, SGY_FILE)
