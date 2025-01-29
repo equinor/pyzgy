@@ -250,7 +250,7 @@ class SeismicReader:
             The corresponding cartesian y coordinate
         """
         return (
-            self.corners[0][0]
+            self.corners[0][1]
             + il_coord * self.northing_inc_il
             + xl_coord * self.northing_inc_xl
         )
