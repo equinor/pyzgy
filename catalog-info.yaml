@@ -1,0 +1,10 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: pyzgy
+  annotations:
+    github.com/project-slug: equinor/pyzgy
+spec:
+  type: other
+  lifecycle: unknown
+  owner: deli-team
