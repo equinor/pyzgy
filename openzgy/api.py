@@ -644,7 +644,8 @@ class ZgyWriter(ZgyMetaAndTools):
     "with" block.
     """
     def __init__(self, filename, *,
-                 iocontext=None, compressor=None, lodcompressor=None, **kwargs):
+                 iocontext=None, compressor=None, lodcompressor=None,
+                 num_threads=1, **kwargs):
         """
         Create a new ZGY file.
 
@@ -659,6 +660,9 @@ class ZgyWriter(ZgyMetaAndTools):
         several times to add meta information. Caveat: Behind the
         scenes the file is simply deleted and re-created. This is
         slightly less efficient than opening the file for read/write.
+
+        Optionally pass num_threads = N to compute the low resolution data,
+        statistics and histogram in N threads (default 1).
 
         templatename: string
             Optionally create a file similar to this one.
@@ -803,6 +807,7 @@ class ZgyWriter(ZgyMetaAndTools):
             self._fd, self._meta,
             compressed = bool(compressor or lodcompressor))
         self._dirty = False # If True need LOD, stats, histogram.
+        self._num_threads = num_threads
         self._compressor = compressor or lodcompressor
         self._lodcompressor = lodcompressor or compressor
 
@@ -954,11 +959,12 @@ class ZgyWriter(ZgyMetaAndTools):
         if self._dirty or force:
             self._dirty = False
             stats, histo = _internal.GenLodC(
-                accessor   = self._accessor,
-                compressor = self._lodcompressor,
-                decimation = decimation,
-                progress   = progress,
-                verbose    = verbose)()
+                accessor    = self._accessor,
+                compressor  = self._lodcompressor,
+                decimation  = decimation,
+                progress    = progress,
+                verbose     = verbose,
+                num_threads = self._num_threads)()
             # TODO-Low: Refactor:
             # violating encapsulation rather more than usual.
             # Note that _accessor._metadata is private; it is a copy

@@ -37,3 +37,24 @@ def test_SeismicWriter(zgy_sgy_file_pairs, temp_dir):
         assert annotstart == reader.annotstart
         assert annotinc == reader.annotinc
         assert corners == reader.corners
+
+
+def test_SeismicWriter_num_threads(temp_dir):
+    from openzgy.api import ZgyReader
+    rng = np.random.default_rng(1)
+    data = rng.standard_normal((520, 300, 250), dtype=np.float32)
+    for n in (1, 4):
+        with SeismicWriter(temp_dir/f"threads{n}.zgy", data.shape, 0.0, 1.0,
+                           (0, 0), (1.0, 1.0), num_threads=n) as writer:
+            writer.write_volume(data)
+    with ZgyReader(str(temp_dir/"threads1.zgy")) as r1, \
+         ZgyReader(str(temp_dir/"threads4.zgy")) as r4:
+        assert r1.nlods == r4.nlods == 5
+        assert r1.statistics == r4.statistics
+        for lod in range(r1.nlods):
+            shape = [(s + (1 << lod) - 1) >> lod for s in r1.size]
+            a = np.zeros(shape, np.float32)
+            b = np.zeros(shape, np.float32)
+            r1.read((0, 0, 0), a, lod=lod)
+            r4.read((0, 0, 0), b, lod=lod)
+            assert np.array_equal(a, b)

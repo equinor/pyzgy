@@ -15,7 +15,8 @@
 import sys
 import argparse
 import numpy as np
-from collections import namedtuple
+from collections import namedtuple, deque
+from concurrent.futures import ThreadPoolExecutor
 
 from . import enum as impl_enum
 from ..exception import *
@@ -102,6 +103,21 @@ def _choose_blocksizes(bricksize, surveysize, nlods, dtype, maxmem=512*1024*1024
     result = _make_blocksizes(bricksize, surveysize, nlods, dtype,
                               factor=(ifactor,jfactor,1), verbose=None)
     return result
+
+def _ordered_map(func, items, nthreads):
+    """Yield func(item) for each item, in order. At most 2*nthreads items are in flight."""
+    with ThreadPoolExecutor(nthreads) as pool:
+        pending = deque()
+        try:
+            for item in items:
+                pending.append(pool.submit(func, item))
+                if len(pending) >= 2 * nthreads:
+                    yield pending.popleft().result()
+            while pending:
+                yield pending.popleft().result()
+        finally:
+            for f in pending:
+                f.cancel()
 
 class GenLodBase:
     """
@@ -228,27 +244,40 @@ class GenLodImpl(GenLodBase):
     implementing plan B in addition to the plan C already implemented.
     The implementation can be used as-is in a unit test with mocked I/O.
     """
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, num_threads = 1, **kwargs):
         super().__init__(*args, **kwargs)
         #print("GenLodImpl", args, kwargs)
+        self._num_threads = num_threads
         self._stats = StatisticData()
         self._histo = HistogramData(range_hint=self._range_hint,
                                     dtype=self._dtype)
-        # See base constructor. Better than no histogram at all.
-        self._wa_histogram = self._wa_histogram or self._histo
 
     def __call__(self):
         """
         Generate and store statistics, histogram, and all low resolution
-        bricks. Works for plans C and D. If we also need an implementation
-        of plan B then this method wold need to iterate over all bricks
-        and lods, and _accumulate would not make any recursive calls.
+        bricks. The lod0 blocks are summarized in parallel, and their
+        statistics are merged in depth first order. Then each lod1 frame is
+        calculated with its four lod0 blocks, in parallel. The levels from 2
+        up, and all writes, are done by the calling thread in the same order
+        as the recursive calculation this replaces
         """
-        self._calculate((0,0,0), self._nlods-1)
+        leaves, last = self._traverse()
+        self._last = last
+        # cum[k] is the histogram after leaves[0..k], needed for weighted average.
+        self._cum = np.empty((len(leaves), self._histo._bins.size), dtype=np.int64)
+        for k, (data, s, bins) in enumerate(_ordered_map(self._leaf, leaves, self._num_threads)):
+            self._report(data)
+            self._stats._add_other(s)
+            self._histo._bins += bins
+            self._cum[k] = self._histo._bins
+        if self._nlods > 1:
+            frames = [pos for (lod, pos) in last if lod == 1]
+            subtrees = _ordered_map(self._subtree, frames, self._num_threads)
+            self._combine((0, 0, 0), self._nlods - 1, subtrees)
         self._savestats() # Remove?
         return self._stats, self._histo
 
-    def _accumulate(self, data):
+    def _accumulate(self, stats, histo, data):
         """
         Keep a running tally of statistics and histogram.
         """
@@ -258,76 +287,98 @@ class GenLodImpl(GenLodBase):
         if isinstance(data, ScalarBuffer):
             factor = np.prod(data.shape, dtype=np.int64)
             data = np.array([data.value], dtype=data.dtype)
-        self._stats.add(data, factor)
-        self._histo.add(data, factor)
+        stats.add(data, factor)
+        histo.add(data, factor)
 
-    def _calculate(self, readpos, readlod):
-        """
-        Read data from the specified (readpos, readlod) and store it back.
-        The function will itself decide how much to read. But with several
-        constraints. Always read full traces. Size in i and j needs to be
-        2* bs * 2^N  where bs is the file's brick size in that dimension,
-        Clipped to the survey boundaries. This might give an empty result.
-
-        When readlod is 0 and the data was read from the ZGY file then the
-        writing part is skipped. Since the data is obviously there already.
-
-        In addition to reading and writing at the readlod level, the
-        method will compute a single decimated buffer at readlod+1 and
-        return it. As with the read/write the buffer might be smaller at
-        the survey edge. Note that the caller is responsible for storing
-        the decimated data.
-
-        Full resolution data (lod 0) will be read from file (plan C) or the
-        application (plan D). Low resolution is computed by a recursive call
-        to this function (plans C and D) or by reading the file (plan B).
-        Note that currently only plan C is fully implemented.
-
-        For plans B and C a single call needs to be made to read the brick
-        (there is by definition just one) at the highest level of detail.
-        This will end up computing all possible low resolution bricks and
-        storing them. For plan B the caller must iterate.
-        """
-        surveysize = (self._surveysize + (1<<readlod) - 1) // (1<<readlod)
-        readpos = np.array((readpos[0], readpos[1], 0), dtype=np.int64)
-
-        if readpos[0] >= surveysize[0] or readpos[1] >= surveysize[1]:
-            return None
-
-        readsize = np.minimum(2*self._bricksize, surveysize - readpos)
-        readsize[2] = surveysize[2] # Always read full traces.
-        writesize = (readsize + 1) // 2
-
-        self._verbose("@{0}calculate(lod={1}, pos={2})".format(
-            self._prefix(readlod), readlod, tuple(readpos)))
-        if readlod == 0:
-            data = self._read(lod=readlod, pos=readpos, size=readsize)
-            self._accumulate(data)
-        else:
-            offsets = [[0, 0, 0], [0, 1, 0], [1, 0, 0], [1, 1, 0]]
-            offsets = np.array(offsets, dtype=np.int64) * self._bricksize
-            hires = [None, None, None, None]
-            for i in range(4):
-                hires[i] = self._calculate(2*readpos + 2*offsets[i], readlod-1)
-            data = self._paste4(hires[0], hires[1], hires[2], hires[3])
-
-        self._write(lod=readlod, pos=readpos, data=data)
-
-        if readlod == self._nlods - 1:
-            result = None # Caller will discard it anyway.
-            assert self._done == self._total
-        elif not isinstance(data, np.ndarray):
-            result = ScalarBuffer(writesize, data.value, data.dtype)
-        else:
-            result = self._decimate(data, lod=readlod+1)
-            assert tuple(result.shape) == tuple(writesize)
-
-        self._verbose("@{0}calculate returns(lod={1}, pos={2}, data={3})".format(
-            self._prefix(readlod), readlod+1, tuple(readpos//2),
-            self._format_result(result)))
+    def _children(self, pos, lod):
+        """The four frames one level below pos, or None where outside the survey."""
+        bs = self._bricksize
+        ss = (self._surveysize + (1 << (lod-1)) - 1) >> (lod-1)
+        result = []
+        for oi, oj in ((0, 0), (0, 1), (1, 0), (1, 1)):
+            child = (2*pos[0] + 2*oi*bs[0], 2*pos[1] + 2*oj*bs[1], 0)
+            inside = child[0] < ss[0] and child[1] < ss[1]
+            result.append(child if inside else None)
         return result
 
-    def _decimate(self, data, lod):
+    def _traverse(self):
+        """
+        Visit the lod0 blocks depth first. Returns (leaves, last): the lod0
+        block positions in order, and for each frame (lod, pos) the index of
+        the last leaf in its subtree.
+        """
+        leaves, last = [], {}
+        def visit(pos, lod):
+            if lod == 0:
+                leaves.append(pos)
+            else:
+                for child in self._children(pos, lod):
+                    if child is not None:
+                        visit(child, lod-1)
+            last[(lod, pos)] = len(leaves) - 1
+        visit((0, 0, 0), self._nlods - 1)
+        return leaves, last
+
+    def _block_size(self, lod, pos):
+        """Size of the block of 2x2 bricks at this position, full trace length."""
+        ss = (self._surveysize + (1 << lod) - 1) >> lod
+        bs2 = 2 * self._bricksize
+        return np.array((min(bs2[0], ss[0] - pos[0]), min(bs2[1], ss[1] - pos[1]), ss[2]),
+                        dtype=np.int64)
+
+    def _snapshot(self, index):
+        """The histogram as it was after leaves[0..index]."""
+        histo = HistogramData(range_hint=self._range_hint, dtype=self._dtype)
+        histo._bins = self._cum[index]
+        return histo
+
+    def _leaf(self, pos):
+        """Read one lod0 block and summarize it. Runs in a worker thread."""
+        pos = np.array(pos, dtype=np.int64)
+        data = self._read(0, pos, self._block_size(0, pos))
+        stats = StatisticData()
+        histo = HistogramData(range_hint=self._range_hint, dtype=self._dtype)
+        self._accumulate(stats, histo, data)
+        return data, stats, histo._bins
+
+    def _subtree(self, pos):
+        """
+        Calculate one lod1 frame from its four lod0 blocks. Runs in a worker
+        thread. Returns the lod1 data, which the caller writes, and the lod2
+        decimation of it, which the parent frame needs.
+        """
+        hires = []
+        for leaf in self._children(pos, 1):
+            if leaf is None:
+                hires.append(None)
+            else:
+                data = self._read(0, np.array(leaf, dtype=np.int64), self._block_size(0, leaf))
+                hires.append(self._decimate(data, 1, self._snapshot(self._last[(0, leaf)])))
+        data = self._paste4(*hires)
+        result = None
+        if self._nlods > 2:
+            result = self._decimate(data, 2, self._snapshot(self._last[(1, pos)]))
+        return data, result
+
+    def _combine(self, pos, lod, subtrees):
+        """
+        Calculate and write one frame at lod 1 or above. The lod1 frames come
+        from subtrees, in the same depth first order as the recursion.
+        """
+        if lod == 1:
+            data, result = next(subtrees)
+            self._write(1, np.array(pos, dtype=np.int64), data)
+            return result
+        hires = []
+        for child in self._children(pos, lod):
+            hires.append(None if child is None else self._combine(child, lod-1, subtrees))
+        data = self._paste4(*hires)
+        self._write(lod, np.array(pos, dtype=np.int64), data)
+        if lod == self._nlods - 1:
+            return None
+        return self._decimate(data, lod+1, self._snapshot(self._last[(lod, pos)]))
+
+    def _decimate(self, data, lod, histogram):
         """
         Return a decimated version of the input buffer with half the size
         (rounded up) in each dimension. In total the result will be ~1/8
@@ -350,7 +401,7 @@ class GenLodImpl(GenLodBase):
             dt = self._decimation_type[min(lod, len(self._decimation_type)-1)]
             if dt == DecimationType.WeightedAverage:
                 return decimate(data, dt,
-                                histogram = self._wa_histogram,
+                                histogram = histogram,
                                 defaultvalue = self._wa_defaultvalue)
             elif dt == DecimationType.AverageNon0:
                 return decimate(data, dt,
@@ -421,7 +472,7 @@ class GenLodC(GenLodImpl):
     """
     def __init__(self, accessor, *,
                  compressor = None, decimation = None,
-                 progress = None, verbose = None):
+                 progress = None, verbose = None, num_threads = 1):
         # Could add defaultvalue. And add a unit test for correct operation.
         super().__init__(size = accessor._metadata._ih._size,
                          bricksize = accessor._metadata._ih._bricksize,
@@ -431,7 +482,8 @@ class GenLodC(GenLodImpl):
                                        accessor._sample_max),
                          nlods = accessor._metadata._ih._nlods,
                          decimation = decimation,
-                         progress = progress, verbose = verbose)
+                         progress = progress, verbose = verbose,
+                         num_threads = num_threads)
         self._accessor = accessor
         self._compressor = compressor
 
@@ -451,7 +503,6 @@ class GenLodC(GenLodImpl):
             self._prefix(lod-1), lod, tuple(pos), tuple(size),
             self._format_result(data)))
         assert tuple(size) == tuple(data.shape)
-        self._report(data)
         return data
 
     def _write(self, lod, pos, data):

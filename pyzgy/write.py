@@ -12,7 +12,8 @@ class SeismicWriter:
         zinc,
         annotstart,
         annotinc,
-        corners=None):
+        corners=None,
+        num_threads=1):
         """Handler class to write a 3D volume to ZGY format.
 
         The size of the file must be initialised and created before the data
@@ -56,6 +57,9 @@ class SeismicWriter:
                 |
                 |______________________>
             (0, il1, xl1)          (2, il1, xln)
+
+        num_threads: int
+            Threads used when the file is finalized (default 1).
         """
         assert len(size) == 3
         self._size = size
@@ -77,7 +81,8 @@ class SeismicWriter:
             zinc=self.zinc,
             annotstart=self.annotstart,
             annotinc=self.annotinc,
-            corners=self.corners
+            corners=self.corners,
+            num_threads=num_threads
         )
 
     def __enter__(self):

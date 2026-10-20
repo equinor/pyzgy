@@ -268,7 +268,7 @@ class PyZGY:
             inc = 0
         return inc
 
-    def to_zgy(self, filename, data_variable="data"):
+    def to_zgy(self, filename, data_variable="data", num_threads=1):
         """Output single variable to ZGY file.
 
         Expects dimension names of `iline`, `xline` and `samples` for a 3D
@@ -285,6 +285,9 @@ class PyZGY:
 
         data_variable: str
             The name of the data volume variable to export, defaults to "data".
+
+        num_threads: int
+            Threads used when the file is finalized (default 1).
         """
         # test for malformed dataset
         assert data_variable in self._obj
@@ -314,7 +317,8 @@ class PyZGY:
             zinc,
             (self._obj["iline"][0].item(), self._obj["xline"][0].item()),
             annotinc,
-            corners=self._corners
+            corners=self._corners,
+            num_threads=num_threads
         ) as writer:
             if zgy_dv.chunks:
                 il_cx, xl_cx, s_cx = zgy_dv.chunks

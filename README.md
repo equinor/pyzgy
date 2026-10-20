@@ -56,12 +56,13 @@ from pyzgy.accessors import SeismicWriter
 # create a dummy 10x10x10 cube
 data = np.zeros((10, 10, 10))
 
-with SeismicWriter("out.zgy"
+with SeismicWriter("out.zgy",
     data.shape,
     0.0, # the first sample
     4.0, # the sample increment
     (100, 100), # the first iline and xline labels
     (1, 2), # the iline and xline increments
+    num_threads=8, # optional, threads used to finalize the file (default 1)
     ) as writer:
         writer.write_volume(data)
 ```
@@ -86,6 +87,9 @@ sub_vol = zgy.sel(
 
 # write out to zgy file
 zgy.pyzgy.to_zgy("out.zgy")
+
+# optionally use more threads to finalize the file (default 1)
+zgy.pyzgy.to_zgy("out.zgy", num_threads=8)
 
 ```
 

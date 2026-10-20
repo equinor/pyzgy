@@ -46,17 +46,9 @@ def _reorder(brick):
     each of the 2x2x2 samples that are to be combined in the last
     dimension. E.g. an input shape (64, 64, 64) returns a (32, 32, 32, 8).
     """
-    shape = (brick.shape[0]//2, brick.shape[1]//2, brick.shape[2]//2, 8)
-    tmp = np.zeros(shape, dtype=brick.dtype)
-    tmp[...,0] = brick[0::2,0::2,0::2]
-    tmp[...,1] = brick[0::2,0::2,1::2]
-    tmp[...,2] = brick[0::2,1::2,0::2]
-    tmp[...,3] = brick[0::2,1::2,1::2]
-    tmp[...,4] = brick[1::2,0::2,0::2]
-    tmp[...,5] = brick[1::2,0::2,1::2]
-    tmp[...,6] = brick[1::2,1::2,0::2]
-    tmp[...,7] = brick[1::2,1::2,1::2]
-    return tmp
+    i, j, k = (n // 2 for n in brick.shape)
+    tmp = brick.reshape(i, 2, j, 2, k, 2).transpose(0, 2, 4, 1, 3, 5)
+    return tmp.reshape(i, j, k, 8)
 
 _filter = np.array([
     +0.07996591908598821,
@@ -155,8 +147,9 @@ def _decimate_WeightedAverage(data, *, histogram, defaultvalue):
     tmp_wsum = data * tmp_weight
 
     # Now sum each 2x2x2 set of samples.
-    tmp_wsum = np.nansum(_reorder(tmp_wsum), 3)
-    tmp_weight = np.nansum(_reorder(tmp_weight), 3)
+    # No NaN is left here: non-finite inputs were set to 0 above.
+    tmp_wsum = np.sum(_reorder(tmp_wsum), 3)
+    tmp_weight = np.sum(_reorder(tmp_weight), 3)
 
     # Zero weights means no valid samples found among the 8 inputs.
     # This can only happen if non-finite data was present in the input,
